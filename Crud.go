@@ -726,7 +726,7 @@ func (crud Crud) _form([]FormField) []*hb.Tag {
 				bs.InputGroup().Children([]*hb.Tag{
 					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
 					bs.InputGroupText().Children([]*hb.Tag{
-						hb.NewHyperlink().HTML("Browse").Href(links.NewAdminLinks().FileManager(map[string]string{})).Target("_blank"),
+						// hb.NewHyperlink().HTML("Browse").Href(links.NewAdminLinks().FileManager(map[string]string{})).Target("_blank"),
 					}),
 				}),
 			})
