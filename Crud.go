@@ -28,6 +28,7 @@ type CrudConfig struct {
 	CreateFields        []FormField
 	Endpoint            string
 	HomeURL             string
+	FileManagerURL      string
 	EntityNamePlural    string
 	EntityNameSingular  string
 	ColumnNames         []string
@@ -44,6 +45,7 @@ type Crud struct {
 	createFields        []FormField
 	endpoint            string
 	homeURL             string
+	fileManagerURL      string
 	entityNamePlural    string
 	entityNameSingular  string
 	columnNames         []string
@@ -107,6 +109,7 @@ func NewCrud(config CrudConfig) (crud Crud, err error) {
 	crud.entityNamePlural = config.EntityNamePlural
 	crud.entityNameSingular = config.EntityNameSingular
 	crud.homeURL = config.HomeURL
+	crud.fileManagerURL = config.FileManagerURL
 	crud.updateFields = config.UpdateFields
 
 	// crud.pathEntitiesEntityCreateAjax = "entities/entity-create-ajax"
@@ -725,9 +728,9 @@ func (crud Crud) _form([]FormField) []*hb.Tag {
 					Style(`width:200px;`),
 				bs.InputGroup().Children([]*hb.Tag{
 					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
-					bs.InputGroupText().Children([]*hb.Tag{
-						// hb.NewHyperlink().HTML("Browse").Href(links.NewAdminLinks().FileManager(map[string]string{})).Target("_blank"),
-					}),
+					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]*hb.Tag{
+						hb.NewHyperlink().HTML("Browse").Href(crud.fileManagerURL).Target("_blank"),
+					})),
 				}),
 			})
 		}

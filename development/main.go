@@ -22,6 +22,7 @@ func crudHandler(w http.ResponseWriter, r *http.Request) {
 	crudInstance, err := crud.NewCrud(crud.CrudConfig{
 		Endpoint:           "/crud",
 		HomeURL:            "/",
+		FileManagerURL:     "/file-manager",
 		EntityNameSingular: "User",
 		EntityNamePlural:   "Users",
 		ColumnNames:        []string{"First Name", "Last Name"},
