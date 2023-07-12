@@ -456,7 +456,7 @@ func (crud Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	};
-	Vue.createApp(EntityUpdate).use(ElementPlus).use(naive).component('Trumbowyg', VueTrumbowyg.default).mount('#entity-update')
+	Vue.createApp(EntityUpdate).use(ElementPlus).component('Trumbowyg', VueTrumbowyg.default).mount('#entity-update')
 		`
 
 	// webpage := crud.webpage("Edit "+crud.entityNameSingular, h)
@@ -689,7 +689,7 @@ func (crud Crud) _layout(w http.ResponseWriter, r *http.Request, title string, c
 	html := ""
 
 	if crud.funcLayout != nil {
-		jsFiles = append([]string{"//unpkg.com/naive-ui"}, jsFiles...)
+		// jsFiles = append([]string{"//unpkg.com/naive-ui"}, jsFiles...)
 		jsFiles = append([]string{"//cdn.jsdelivr.net/npm/element-plus"}, jsFiles...)
 		jsFiles = append([]string{"https://unpkg.com/vue@3/dist/vue.global.js"}, jsFiles...)
 		jsFiles = append([]string{"https://cdn.jsdelivr.net/npm/sweetalert2@9"}, jsFiles...)

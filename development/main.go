@@ -21,8 +21,10 @@ var db *sql.DB
 func crudHandler(w http.ResponseWriter, r *http.Request) {
 	crudInstance, err := crud.NewCrud(crud.CrudConfig{
 		Endpoint:           "/crud",
+		HomeURL:            "/",
 		EntityNameSingular: "User",
 		EntityNamePlural:   "Users",
+		ColumnNames:        []string{"First Name", "Last Name"},
 		CreateFields: []crud.FormField{
 			{
 				Type:  "string",
@@ -33,9 +35,48 @@ func crudHandler(w http.ResponseWriter, r *http.Request) {
 		UpdateFields: []crud.FormField{
 			{
 				Type:  "string",
-				Label: "Name",
-				Name:  "name",
+				Label: "First Name",
+				Name:  "first_name",
 			},
+			{
+				Type:  "string",
+				Label: "Last Name",
+				Name:  "last_name",
+			},
+		},
+		FuncRows: func() ([]crud.Row, error) {
+			return []crud.Row{
+				{
+					ID:   "ID1",
+					Data: []string{"Jon", "Doe"},
+				},
+				{
+					ID:   "ID2",
+					Data: []string{"Sarah", "Smith"},
+				},
+				{
+					ID:   "ID3",
+					Data: []string{"Tom", "Sawyer"},
+				},
+			}, nil
+		},
+		FuncCreate: func(data map[string]string) (string, error) {
+			// Logic for creating a new user
+			return "ID4", nil
+		},
+		FuncUpdate: func(entityID string, data map[string]string) error {
+			// Logic for updating an existing user
+			return nil
+		},
+		FuncTrash: func(entityID string) error {
+			// Logic for deleting an existing user
+			return nil
+		},
+		FuncFetchUpdateData: func(entityID string) (map[string]string, error) {
+			// Logic for fetching an existing user
+			return map[string]string{
+				"name": "Charles Dickens",
+			}, nil
 		},
 	})
 
