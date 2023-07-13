@@ -23,6 +23,7 @@ const pathEntityTrashAjax = "entity-trash-ajax"
 const FORM_GROUP_TYPE_STRING = "string"
 const FORM_GROUP_TYPE_TEXTAREA = "textarea"
 const FORM_GROUP_TYPE_SELECT = "select"
+const FORM_GROUP_TYPE_IMAGE = "image"
 
 type CrudConfig struct {
 	CreateFields        []FormField
@@ -134,7 +135,7 @@ func (crud Crud) Handler(w http.ResponseWriter, r *http.Request) {
 	routeFunc(w, r.WithContext(ctx))
 }
 
-func (crud Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Request) {
 	routes := map[string]func(w http.ResponseWriter, r *http.Request){
 		"home": crud.pageEntityManager,
 		// START: Custom Entities
@@ -154,7 +155,7 @@ func (crud Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Requ
 	return routes["home"]
 }
 
-func (crud Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
 	names := crud._listCreateNames()
 	posts := map[string]string{}
 	for _, name := range names {
@@ -171,7 +172,7 @@ func (crud Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
 	api.Respond(w, r, api.SuccessWithData("Saved successfully", map[string]interface{}{"entity_id": entityID}))
 }
 
-func (crud Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 	// header := cms.cmsHeader(endpoint)
 	breadcrums := crud._breadcrumbs([]Breadcrumb{
 		{
@@ -341,7 +342,7 @@ Vue.createApp(EntityManager).mount('#entity-manager')
 	w.Write([]byte(html))
 }
 
-func (crud Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 	// endpoint := r.Context().Value(keyEndpoint).(string)
 	// log.Println(endpoint)
 
@@ -484,7 +485,7 @@ func (crud Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(html))
 }
 
-func (crud Crud) pageEntityUpdateAjax(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) pageEntityUpdateAjax(w http.ResponseWriter, r *http.Request) {
 	entityID := strings.Trim(utils.Req(r, "entity_id", ""), " ")
 
 	if entityID == "" {
@@ -508,7 +509,7 @@ func (crud Crud) pageEntityUpdateAjax(w http.ResponseWriter, r *http.Request) {
 	api.Respond(w, r, api.SuccessWithData("Saved successfully", map[string]interface{}{"entity_id": entityID}))
 }
 
-func (crud Crud) pageEntityTrashAjax(w http.ResponseWriter, r *http.Request) {
+func (crud *Crud) pageEntityTrashAjax(w http.ResponseWriter, r *http.Request) {
 	entityID := strings.Trim(utils.Req(r, "entity_id", ""), " ")
 
 	if entityID == "" {
@@ -526,7 +527,7 @@ func (crud Crud) pageEntityTrashAjax(w http.ResponseWriter, r *http.Request) {
 	api.Respond(w, r, api.SuccessWithData("Entity trashed successfully", map[string]interface{}{"entity_id": entityID}))
 }
 
-func (crud Crud) pageEntitiesEntityTrashModal() *hb.Tag {
+func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 	modal := hb.NewDiv().ID("ModalEntityTrash").Class("modal fade")
 	modalDialog := hb.NewDiv().Attr("class", "modal-dialog")
 	modalContent := hb.NewDiv().Attr("class", "modal-content")
@@ -542,7 +543,7 @@ func (crud Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 	return modal
 }
 
-func (crud Crud) pageEntitiesEntityCreateModal() *hb.Tag {
+func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
 	fields := []*hb.Tag{}
 	for _, field := range crud.createFields {
 		attrName := field.Name
@@ -590,38 +591,38 @@ func (crud Crud) pageEntitiesEntityCreateModal() *hb.Tag {
 	return modal
 }
 
-func (crud Crud) urlHome() string {
+func (crud *Crud) urlHome() string {
 	url := crud.homeURL
 	return url
 }
 
-func (crud Crud) UrlEntityManager() string {
+func (crud *Crud) UrlEntityManager() string {
 	url := crud.endpoint + "?path=" + pathEntityManager
 	return url
 }
 
-func (crud Crud) UrlEntityCreateAjax() string {
+func (crud *Crud) UrlEntityCreateAjax() string {
 	url := crud.endpoint + "?path=" + pathEntityCreateAjax
 	return url
 }
 
-func (crud Crud) UrlEntityTrashAjax() string {
+func (crud *Crud) UrlEntityTrashAjax() string {
 	url := crud.endpoint + "?path=" + pathEntityTrashAjax
 	return url
 }
 
-func (crud Crud) UrlEntityUpdate() string {
+func (crud *Crud) UrlEntityUpdate() string {
 	url := crud.endpoint + "?path=" + pathEntityUpdate
 	return url
 }
 
-func (crud Crud) UrlEntityUpdateAjax() string {
+func (crud *Crud) UrlEntityUpdateAjax() string {
 	url := crud.endpoint + "?path=" + pathEntityUpdateAjax
 	return url
 }
 
 // Webpage returns the webpage template for the website
-func (crud Crud) webpage(title, content string) *hb.Webpage {
+func (crud *Crud) webpage(title, content string) *hb.Webpage {
 	faviconImgCms := `data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmzKzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEQEAAQERAAEAAQABAAEAAQABAQEBEQABAAEREQEAAAERARARAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAAi6MAALu7AAC6owAAuC8AAIkjAAD//wAA//8AAP//AAD//wAA`
 	app := ""
 	webpage := hb.NewWebpage()
@@ -673,7 +674,7 @@ func (crud Crud) webpage(title, content string) *hb.Webpage {
 	return webpage
 }
 
-func (crud Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
+func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
 	nav := hb.NewNav().Attr("aria-label", "breadcrumb")
 	ol := hb.NewOL().Attr("class", "breadcrumb")
 	for _, breadcrumb := range breadcrumbs {
@@ -688,7 +689,7 @@ func (crud Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
 	return nav.ToHTML()
 }
 
-func (crud Crud) _layout(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string {
+func (crud *Crud) _layout(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string {
 	html := ""
 
 	if crud.funcLayout != nil {
@@ -710,7 +711,7 @@ func (crud Crud) _layout(w http.ResponseWriter, r *http.Request, title string, c
 	return html
 }
 
-func (crud Crud) _form([]FormField) []*hb.Tag {
+func (crud *Crud) _form([]FormField) []*hb.Tag {
 	tags := []*hb.Tag{}
 	for _, field := range crud.updateFields {
 		fieldName := field.Name
@@ -773,7 +774,7 @@ func (crud Crud) _form([]FormField) []*hb.Tag {
 	return tags
 }
 
-func (crud Crud) _listCreateNames() []string {
+func (crud *Crud) _listCreateNames() []string {
 	names := []string{}
 	for _, field := range crud.createFields {
 		if field.Name == "" {
@@ -784,7 +785,7 @@ func (crud Crud) _listCreateNames() []string {
 	return names
 }
 
-func (crud Crud) _listUpdateNames() []string {
+func (crud *Crud) _listUpdateNames() []string {
 	names := []string{}
 	for _, field := range crud.updateFields {
 		if field.Name == "" {
