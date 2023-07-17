@@ -12,6 +12,7 @@ import (
 	"github.com/gouniverse/hb"
 	"github.com/gouniverse/icons"
 	"github.com/gouniverse/utils"
+	"github.com/samber/lo"
 )
 
 const pathEntityCreateAjax = "entity-create-ajax"
@@ -20,10 +21,12 @@ const pathEntityUpdate = "entity-update"
 const pathEntityUpdateAjax = "entity-update-ajax"
 const pathEntityTrashAjax = "entity-trash-ajax"
 
-const FORM_GROUP_TYPE_STRING = "string"
-const FORM_GROUP_TYPE_TEXTAREA = "textarea"
-const FORM_GROUP_TYPE_SELECT = "select"
-const FORM_GROUP_TYPE_IMAGE = "image"
+const FORM_FIELD_TYPE_STRING = "string"
+const FORM_FIELD_TYPE_TEXTAREA = "textarea"
+const FORM_FIELD_TYPE_SELECT = "select"
+const FORM_FIELD_TYPE_IMAGE = "image"
+const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
+const FORM_FIELD_TYPE_DATETIME = "datetime"
 
 type CrudConfig struct {
 	CreateFields        []FormField
@@ -75,6 +78,7 @@ type FormField struct {
 	Help     string
 	Options  []FormFieldOption
 	OptionsF func() []FormFieldOption
+	Required bool
 }
 
 type Row struct {
@@ -332,9 +336,9 @@ Vue.createApp(EntityManager).mount('#entity-manager')
 	`
 	title := crud.entityNameSingular + " Manager"
 	html := crud._layout(w, r, title, content, []string{
-		"//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css",
+		cdn.JqueryDataTablesCss_1_13_4(),
 	}, "html{width:100%;}", []string{
-		"//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js",
+		cdn.JqueryDataTablesJs_1_13_4(),
 	}, inlineScript)
 
 	w.WriteHeader(200)
@@ -468,13 +472,10 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 
 	title := "Edit " + crud.entityNameSingular
 	html := crud._layout(w, r, title, content, []string{
-		"https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/css/jquery.dataTables.css",
-		// "https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.19.1/ui/trumbowyg.min.css",
+		cdn.JqueryDataTablesCss_1_13_4(),
 		cdn.TrumbowygCss_2_27_3(),
 	}, "", []string{
-		"https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.21/js/jquery.dataTables.js",
-		// "https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.19.1/trumbowyg.min.js",
-		// "https://unpkg.com/vue@3/dist/vue.global.js",
+		cdn.JqueryDataTablesJs_1_13_4(),
 		cdn.TrumbowygJs_2_27_3(),
 		"https://cdn.jsdelivr.net/npm/vue-trumbowyg@4",
 		"https://cdn.jsdelivr.net/npm/element-plus",
@@ -497,6 +498,23 @@ func (crud *Crud) pageEntityUpdateAjax(w http.ResponseWriter, r *http.Request) {
 	posts := map[string]string{}
 	for _, name := range names {
 		posts[name] = utils.Req(r, name, "")
+	}
+
+	// Check required fields
+	for _, field := range crud.updateFields {
+		if !field.Required {
+			continue
+		}
+
+		if _, exists := posts[field.Name]; !exists {
+			api.Respond(w, r, api.Error(field.Label+" is required field"))
+			return
+		}
+
+		if lo.IsEmpty(posts[field.Name]) {
+			api.Respond(w, r, api.Error(field.Label+" is required field"))
+			return
+		}
 	}
 
 	err := crud.funcUpdate(entityID, posts)
@@ -719,10 +737,22 @@ func (crud *Crud) _form([]FormField) []*hb.Tag {
 		if fieldLabel == "" {
 			fieldLabel = fieldName
 		}
+
 		formGroup := hb.NewDiv().Class("form-group mt-3")
-		formGroupLabel := hb.NewLabel().HTML(fieldLabel).Attr("class", "form-label")
-		formGroupInput := hb.NewInput().Class("form-control").Attr("v-model", "entityModel."+fieldName)
-		if field.Type == "image" {
+
+		formGroupLabel := hb.NewLabel().
+			HTML(fieldLabel).
+			Class("form-label").
+			ChildIf(
+				field.Required,
+				hb.NewSup().HTML("*").Class("text-danger ml-1"),
+			)
+
+		formGroupInput := hb.NewInput().
+			Class("form-control").
+			Attr("v-model", "entityModel."+fieldName)
+
+		if field.Type == FORM_FIELD_TYPE_IMAGE {
 			formGroupInput = hb.NewDiv().Children([]*hb.Tag{
 				hb.NewImage().
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
@@ -735,18 +765,22 @@ func (crud *Crud) _form([]FormField) []*hb.Tag {
 				}),
 			})
 		}
-		if field.Type == "datetime" {
+
+		if field.Type == FORM_FIELD_TYPE_DATETIME {
 			// formGroupInput = hb.NewInput().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
 			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
 			// formGroupInput = hb.NewTag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
-		if field.Type == "textarea" {
+
+		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
 			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
-		if field.Type == "htmlarea" {
+
+		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
 			formGroupInput = hb.NewTag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
 		}
-		if field.Type == "select" {
+
+		if field.Type == FORM_FIELD_TYPE_SELECT {
 			formGroupInput = hb.NewSelect().Class("form-select").Attr("v-model", "entityModel."+fieldName)
 			for _, opt := range field.Options {
 				option := hb.NewOption().Value(opt.Key).HTML(opt.Value)
@@ -759,6 +793,7 @@ func (crud *Crud) _form([]FormField) []*hb.Tag {
 				}
 			}
 		}
+
 		formGroup.AddChild(formGroupLabel)
 		formGroup.AddChild(formGroupInput)
 

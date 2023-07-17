@@ -7,37 +7,24 @@ require (
 	github.com/gouniverse/api v1.5.0
 	github.com/gouniverse/bs v0.10.1
 	github.com/gouniverse/cdn v0.5.0
-	github.com/gouniverse/cms v0.46.4
 	github.com/gouniverse/hb v1.58.0
 	github.com/gouniverse/icons v1.3.0
 	github.com/gouniverse/utils v1.31.0
 	github.com/lib/pq v1.10.9
+	github.com/samber/lo v1.38.1
 	modernc.org/sqlite v1.24.0
 )
 
 require (
 	github.com/darkoatanasovski/htmltags v1.0.0 // indirect
-	github.com/doug-martin/goqu/v9 v9.18.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/georgysavva/scany v1.2.1 // indirect
-	github.com/golang-module/carbon/v2 v2.2.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gouniverse/cachestore v0.16.0 // indirect
-	github.com/gouniverse/entitystore v0.58.0 // indirect
-	github.com/gouniverse/logstore v1.2.0 // indirect
-	github.com/gouniverse/maputils v0.2.0 // indirect
-	github.com/gouniverse/responses v0.1.0 // indirect
-	github.com/gouniverse/sessionstore v0.17.0 // indirect
-	github.com/gouniverse/settingstore v0.11.0 // indirect
-	github.com/gouniverse/sql v0.1.0 // indirect
-	github.com/gouniverse/uid v1.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/samber/lo v1.38.1 // indirect
 	github.com/tdewolff/minify/v2 v2.12.5 // indirect
 	github.com/tdewolff/parse/v2 v2.6.6 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
