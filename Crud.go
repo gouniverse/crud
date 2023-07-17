@@ -161,9 +161,27 @@ func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Req
 
 func (crud *Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
 	names := crud._listCreateNames()
+
 	posts := map[string]string{}
 	for _, name := range names {
 		posts[name] = utils.Req(r, name, "")
+	}
+
+	// Check required fields
+	for _, field := range crud.createFields {
+		if !field.Required {
+			continue
+		}
+
+		if _, exists := posts[field.Name]; !exists {
+			api.Respond(w, r, api.Error(field.Label+" is required field"))
+			return
+		}
+
+		if lo.IsEmpty(posts[field.Name]) {
+			api.Respond(w, r, api.Error(field.Label+" is required field"))
+			return
+		}
 	}
 
 	entityID, err := crud.funcCreate(posts)
@@ -264,7 +282,7 @@ var entityUpdateUrl = ` + urlEntityUpdate + `;
 const EntityManager = {
 	data() {
 		return {
-		  entityCreateModel:{
+		  entityModel:{
 		  },
 		  entityTrashModel:{
 			entityId:null,
@@ -295,7 +313,7 @@ const EntityManager = {
 			modalEntityDelete.show();
 		},
 		entityCreate(){
-		    $.post(entityCreateUrl, this.entityCreateModel).done((result)=>{
+		    $.post(entityCreateUrl, this.entityModel).done((result)=>{
 				if (result.status==="success"){
 					var modalEntityCreate = new bootstrap.Modal(document.getElementById('ModalEntityCreate'));
 			        modalEntityCreate.hide();
@@ -562,35 +580,53 @@ func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 }
 
 func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
-	fields := []*hb.Tag{}
-	for _, field := range crud.createFields {
-		attrName := field.Name
-		attrFormControlLabel := field.Label
-		if attrFormControlLabel == "" {
-			attrFormControlLabel = attrName
-		}
-		formGroupAttr := hb.NewDiv().Attr("class", "form-group mt-3")
-		formGroupAttrLabel := hb.NewLabel().HTML(attrFormControlLabel).Attr("class", "form-label")
-		formGroupAttrInput := hb.NewInput().Attr("class", "form-control").Attr("v-model", "entityCreateModel."+attrName)
-		if field.Type == "textarea" {
-			formGroupAttrInput = hb.NewTextArea().Attr("class", "form-control").Attr("v-model", "entityCreateModel."+attrName)
-		}
-		formGroupAttr.AddChild(formGroupAttrLabel)
-		formGroupAttr.AddChild(formGroupAttrInput)
+	// fields := []*hb.Tag{}
+	// for _, field := range crud.createFields {
+	// 	attrName := field.Name
+	// 	attrFormControlLabel := field.Label
+	// 	if attrFormControlLabel == "" {
+	// 		attrFormControlLabel = attrName
+	// 	}
 
-		// Add help
-		if field.Help != "" {
-			formGroupAttrHelp := hb.NewParagraph().Attr("class", "text-info").HTML(field.Help)
-			formGroupAttr.AddChild(formGroupAttrHelp)
-		}
+	// 	formGroupAttrLabel := hb.NewLabel().
+	// 		HTML(attrFormControlLabel).
+	// 		Class("form-label").
+	// 		ChildIf(
+	// 			field.Required,
+	// 			hb.NewSup().HTML("*").Class("text-danger ml-1"),
+	// 		)
 
-		fields = append(fields, formGroupAttr)
-	}
+	// 	formGroupAttrInput := hb.NewInput().
+	// 		Class("form-control").
+	// 		Attr("v-model", "entityCreateModel."+attrName)
+
+	// 	if field.Type == "textarea" {
+	// 		formGroupAttrInput = hb.NewTextArea().
+	// 			Class("form-control").
+	// 			Attr("v-model", "entityCreateModel."+attrName)
+	// 	}
+
+	// 	formGroupAttr := hb.NewDiv().
+	// 		Class("form-group mt-3").Children([]*hb.Tag{
+	// 		formGroupAttrLabel,
+	// 		formGroupAttrInput,
+	// 	})
+
+	// 	// Add help
+	// 	if field.Help != "" {
+	// 		formGroupAttrHelp := hb.NewParagraph().Attr("class", "text-info").HTML(field.Help)
+	// 		formGroupAttr.AddChild(formGroupAttrHelp)
+	// 	}
+
+	// 	fields = append(fields, formGroupAttr)
+	// }
+
+	form := crud._form(crud.createFields)
 
 	modalHeader := hb.NewDiv().Class("modal-header").
 		AddChild(hb.NewHeading5().HTML("New " + crud.entityNameSingular))
 
-	modalBody := hb.NewDiv().Class("modal-body").AddChildren(fields)
+	modalBody := hb.NewDiv().Class("modal-body").AddChildren(form)
 
 	modalFooter := hb.NewDiv().Class("modal-footer").
 		AddChild(hb.NewButton().HTML("Close").Class("btn btn-prsecondary").Attr("data-bs-dismiss", "modal")).
@@ -729,9 +765,9 @@ func (crud *Crud) _layout(w http.ResponseWriter, r *http.Request, title string, 
 	return html
 }
 
-func (crud *Crud) _form([]FormField) []*hb.Tag {
+func (crud *Crud) _form(fields []FormField) []*hb.Tag {
 	tags := []*hb.Tag{}
-	for _, field := range crud.updateFields {
+	for _, field := range fields {
 		fieldName := field.Name
 		fieldLabel := field.Label
 		if fieldLabel == "" {
