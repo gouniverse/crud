@@ -4,6 +4,8 @@
 
 A "plug-and-play" CRUD interface for GoLang that does its job and stays out of your way.
 
+Compatible with https://github.com/gouniverse/dashboard to create dashboards fast.
+
 ## Screenshots
 <img src="./screenshots/Screenshot_20230712.png" />
 
