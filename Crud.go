@@ -17,48 +17,55 @@ import (
 
 const pathEntityCreateAjax = "entity-create-ajax"
 const pathEntityManager = "entity-manager"
+const pathEntityRead = "entity-read"
 const pathEntityUpdate = "entity-update"
 const pathEntityUpdateAjax = "entity-update-ajax"
 const pathEntityTrashAjax = "entity-trash-ajax"
 
+const FORM_FIELD_TYPE_NUMBER = "number"
 const FORM_FIELD_TYPE_STRING = "string"
 const FORM_FIELD_TYPE_TEXTAREA = "textarea"
 const FORM_FIELD_TYPE_SELECT = "select"
 const FORM_FIELD_TYPE_IMAGE = "image"
 const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
 const FORM_FIELD_TYPE_DATETIME = "datetime"
+const FORM_FIELD_TYPE_PASSWORD = "password"
 
 type CrudConfig struct {
+	ColumnNames         []string
 	CreateFields        []FormField
 	Endpoint            string
-	HomeURL             string
-	FileManagerURL      string
 	EntityNamePlural    string
 	EntityNameSingular  string
-	ColumnNames         []string
+	FileManagerURL      string
 	FuncCreate          func(data map[string]string) (userID string, err error)
-	FuncRows            func() (rows []Row, err error)
-	UpdateFields        []FormField
+	FuncFetchReadData   func(entityID string) ([][2]string, error)
 	FuncFetchUpdateData func(entityID string) (map[string]string, error)
+	FuncLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
+	FuncRows            func() (rows []Row, err error)
 	FuncTrash           func(entityID string) error
 	FuncUpdate          func(entityID string, data map[string]string) error
-	FuncLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
+	HomeURL             string
+	ReadFields          []FormField
+	UpdateFields        []FormField
 }
 
 type Crud struct {
+	columnNames         []string
 	createFields        []FormField
 	endpoint            string
-	homeURL             string
-	fileManagerURL      string
 	entityNamePlural    string
 	entityNameSingular  string
-	columnNames         []string
+	fileManagerURL      string
 	funcCreate          func(data map[string]string) (userID string, err error)
+	funcFetchReadData   func(entityID string) ([][2]string, error)
+	funcFetchUpdateData func(entityID string) (map[string]string, error)
 	funcLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
 	funcRows            func() (rows []Row, err error)
-	funcFetchUpdateData func(entityID string) (map[string]string, error)
 	funcTrash           func(entityID string) error
 	funcUpdate          func(entityID string, data map[string]string) error
+	homeURL             string
+	readFields          []FormField
 	updateFields        []FormField
 }
 
@@ -104,17 +111,19 @@ func NewCrud(config CrudConfig) (crud Crud, err error) {
 	crud = Crud{}
 	crud.columnNames = config.ColumnNames
 	crud.createFields = config.CreateFields
-	crud.funcCreate = config.FuncCreate
-	crud.funcLayout = config.FuncLayout
-	crud.funcRows = config.FuncRows
-	crud.funcFetchUpdateData = config.FuncFetchUpdateData
-	crud.funcTrash = config.FuncTrash
-	crud.funcUpdate = config.FuncUpdate
 	crud.endpoint = config.Endpoint
 	crud.entityNamePlural = config.EntityNamePlural
 	crud.entityNameSingular = config.EntityNameSingular
-	crud.homeURL = config.HomeURL
 	crud.fileManagerURL = config.FileManagerURL
+	crud.funcCreate = config.FuncCreate
+	crud.funcFetchReadData = config.FuncFetchReadData
+	crud.funcFetchUpdateData = config.FuncFetchUpdateData
+	crud.funcLayout = config.FuncLayout
+	crud.funcRows = config.FuncRows
+	crud.funcTrash = config.FuncTrash
+	crud.funcUpdate = config.FuncUpdate
+	crud.homeURL = config.HomeURL
+	crud.readFields = config.ReadFields
 	crud.updateFields = config.UpdateFields
 
 	// crud.pathEntitiesEntityCreateAjax = "entities/entity-create-ajax"
@@ -145,6 +154,7 @@ func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Req
 		// START: Custom Entities
 		pathEntityCreateAjax: crud.pageEntityCreateAjax,
 		pathEntityManager:    crud.pageEntityManager,
+		pathEntityRead:       crud.pageEntityRead,
 		pathEntityUpdate:     crud.pageEntityUpdate,
 		pathEntityUpdateAjax: crud.pageEntityUpdateAjax,
 		pathEntityTrashAjax:  crud.pageEntityTrashAjax,
@@ -207,78 +217,100 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	container := hb.NewDiv().Class("container").ID("entity-manager")
-	heading := hb.NewHeading1().HTML(crud.entityNameSingular + " Manager")
-	button := hb.NewButton().
+	buttonCreate := hb.NewButton().
 		Class("btn btn-success float-end").
 		Attr("v-on:click", "showEntityCreateModal").
 		AddChild(icons.Icon("bi-plus-circle", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("New " + crud.entityNameSingular)
-	heading.AddChild(button)
 
-	// container.AddChild(hb.NewHTML(header))
-	container.AddChild(heading)
-	container.AddChild(hb.NewHTML(breadcrums))
-
-	container.AddChild(crud.pageEntitiesEntityCreateModal())
-	container.AddChild(crud.pageEntitiesEntityTrashModal())
-
-	table := hb.NewTable().ID("TableEntities").Class("table table-responsive table-striped mt-3")
-	thead := hb.NewThead()
-	tbody := hb.NewTbody()
-	table.AddChild(thead).AddChild(tbody)
-
-	tr := hb.NewTR()
-	for _, columnName := range crud.columnNames {
-		tr.AddChild(hb.NewTH().HTML(columnName))
-	}
-	tr.AddChild(hb.NewTD().HTML("Actions").Attr("style", "width:120px;"))
-	thead.AddChild(tr)
+	heading := hb.NewHeading1().
+		HTML(crud.entityNameSingular + " Manager").
+		Child(buttonCreate)
 
 	rows, errRows := crud.funcRows()
 
-	if errRows == nil {
-		for _, row := range rows {
-			buttonEdit := hb.NewButton().
-				Class("btn btn-primary btn-sm").
-				Child(icons.Icon("bi-pencil-square", 12, 12, "white").
-					Style("margin-top:-4px;margin-right:4px;")).
-				HTML("Edit").
-				Attr("type", "button").
-				Attr("v-on:click", "entityEdit('"+row.ID+"')").
-				Style("margin-right:5px")
-
-			buttonTrash := hb.NewButton().
-				Class("btn btn-danger btn-sm").
-				Child(icons.Icon("bi-trash", 12, 12, "white").Style("margin-top:-4px;margin-right:4px;")).
-				HTML("Trash").
-				Attr("type", "button").
-				Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
-
-			tr := hb.NewTR()
-			for _, cell := range row.Data {
-				tr.AddChild(hb.NewTH().HTML(cell))
-			}
-			tr.AddChild(hb.NewTD().AddChild(buttonEdit).AddChild(buttonTrash))
-			tbody.AddChild(tr)
-		}
-		container.Child(table)
-	} else {
+	tableContent := lo.IfF(errRows != nil, func() *hb.Tag {
 		alert := hb.NewDiv().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
-		container.Child(alert)
-	}
+
+		return alert
+	}).ElseF(func() *hb.Tag {
+		table := hb.NewTable().
+			ID("TableEntities").
+			Class("table table-responsive table-striped mt-3").
+			Child(
+				hb.NewThead().
+					Children([]*hb.Tag{
+						hb.NewTR().
+							Children(lo.Map(crud.columnNames, func(columnName string, _ int) *hb.Tag {
+								return hb.NewTH().HTML(columnName)
+							})).
+							Child(hb.NewTD().
+								HTML("Actions").
+								Style("width:120px;")),
+					})).
+			Child(
+				hb.NewTbody().
+					Children(lo.Map(rows, func(row Row, _ int) *hb.Tag {
+						buttonView := hb.NewHyperlink().
+							Class("btn btn-primary btn-sm").
+							Child(icons.Icon("bi-eye", 12, 12, "white").
+								Style("margin-top:-4px;margin-right:4px;")).
+							HTML("Show").
+							Href(crud.UrlEntityRead() + "&entity_id=" + row.ID).
+							Style("margin-right:5px")
+
+						buttonEdit := hb.NewHyperlink().
+							Class("btn btn-primary btn-sm").
+							Child(icons.Icon("bi-pencil-square", 12, 12, "white").
+								Style("margin-top:-4px;margin-right:4px;")).
+							HTML("Edit").
+							Attr("type", "button").
+							Href(crud.UrlEntityUpdate() + "&entity_id=" + row.ID).
+							Style("margin-right:5px")
+
+						buttonTrash := hb.NewButton().
+							Class("btn btn-danger btn-sm").
+							Child(icons.Icon("bi-trash", 12, 12, "white").Style("margin-top:-4px;margin-right:4px;")).
+							HTML("Trash").
+							Attr("type", "button").
+							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
+
+						tr := hb.NewTR().
+							Children(lo.Map(row.Data, func(cell string, _ int) *hb.Tag {
+								return hb.NewTD().HTML(cell)
+							})).
+							Child(
+								hb.NewTD().
+									Style(`white-space:nowrap;`).
+									ChildIf(crud.funcFetchReadData != nil, buttonView).
+									ChildIf(crud.funcFetchUpdateData != nil, buttonEdit).
+									ChildIf(crud.funcTrash != nil, buttonTrash),
+							)
+						return tr
+					})))
+
+		return table
+	})
+
+	container := hb.NewDiv().
+		ID("entity-manager").
+		Class("container").
+		Child(heading).
+		Child(hb.NewHTML(breadcrums)).
+		Child(crud.pageEntitiesEntityCreateModal()).
+		Child(crud.pageEntitiesEntityTrashModal()).
+		Child(tableContent)
 
 	content := container.ToHTML()
 
 	urlEntityCreateAjax, _ := utils.ToJSON(crud.UrlEntityCreateAjax())
 	urlEntityTrashAjax, _ := utils.ToJSON(crud.UrlEntityTrashAjax())
-	urlEntityUpdate, _ := utils.ToJSON(crud.UrlEntityUpdate())
+
 	inlineScript := `
 var entityCreateUrl = ` + urlEntityCreateAjax + `;
 var entityTrashUrl = ` + urlEntityTrashAjax + `;
-var entityUpdateUrl = ` + urlEntityUpdate + `;
 const EntityManager = {
 	data() {
 		return {
@@ -326,10 +358,6 @@ const EntityManager = {
 			});
 		},
 
-		entityEdit(entityId){
-			return location.href = entityUpdateUrl+ "&entity_id=" + entityId;
-		},
-
 		entityTrash(){
 			var entityId = this.entityTrashModel.entityId;
 
@@ -364,17 +392,96 @@ Vue.createApp(EntityManager).mount('#entity-manager')
 	w.Write([]byte(html))
 }
 
-func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
-	// endpoint := r.Context().Value(keyEndpoint).(string)
-	// log.Println(endpoint)
-
+func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 	entityID := utils.Req(r, "entity_id", "")
 	if entityID == "" {
 		api.Respond(w, r, api.Error("Entity ID is required"))
 		return
 	}
 
-	// header := cms.cmsHeader(r.Context().Value(keyEndpoint).(string))
+	if crud.funcFetchReadData == nil {
+		api.Respond(w, r, api.Error("FuncFetchReadData is required"))
+		return
+	}
+
+	breadcrumbs := crud._breadcrumbs([]Breadcrumb{
+		{
+			Name: "Home",
+			URL:  crud.urlHome(),
+		},
+		{
+			Name: crud.entityNameSingular + " Manager",
+			URL:  crud.UrlEntityManager(),
+		},
+		{
+			Name: "View " + crud.entityNameSingular,
+			URL:  crud.UrlEntityUpdate() + "&entity_id=" + entityID,
+		},
+	})
+
+	buttonEdit := hb.NewHyperlink().
+		Class("btn btn-primary ml-2 float-end").
+		Child(icons.Icon("bi-pencil-square", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
+		HTML("Edit").
+		Href(crud.UrlEntityUpdate() + "&entity_id=" + entityID)
+
+	buttonCancel := hb.NewHyperlink().
+		Class("btn btn-secondary ml-2 float-end").
+		Child(icons.Icon("bi-chevron-left", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
+		HTML("Back").
+		Href(crud.UrlEntityManager())
+
+	heading := hb.NewHeading1().
+		HTML("View " + crud.entityNameSingular).
+		Child(buttonEdit).
+		Child(buttonCancel)
+
+	container := hb.NewDiv().
+		ID("entity-read").
+		Class("container").
+		Child(heading).
+		Child(hb.NewHTML(breadcrumbs))
+
+	data, err := crud.funcFetchReadData(entityID)
+
+	table := lo.IfF(err != nil, func() *hb.Tag {
+		alert := hb.NewDiv().
+			Class("alert alert-danger").
+			HTML("There was an error retrieving the data. Please try again later")
+
+		return alert
+	}).ElseF(func() *hb.Tag {
+		table := hb.NewTable().
+			Class("table table-hover table-striped").
+			Child(hb.NewThead().Child(hb.NewTR())).
+			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) *hb.Tag {
+				key := row[0]
+				value := row[1]
+				return hb.NewTR().Children([]*hb.Tag{
+					hb.NewTH().HTML(key),
+					hb.NewTD().HTML(value),
+				})
+			})))
+
+		return table
+	})
+
+	content := container.Child(table).ToHTML()
+	title := "View " + crud.entityNameSingular
+	html := crud._layout(w, r, title, content, []string{}, "", []string{}, "")
+
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(html))
+}
+
+func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
+	entityID := utils.Req(r, "entity_id", "")
+	if entityID == "" {
+		api.Respond(w, r, api.Error("Entity ID is required"))
+		return
+	}
+
 	breadcrums := crud._breadcrumbs([]Breadcrumb{
 		{
 			Name: "Home",
@@ -665,6 +772,11 @@ func (crud *Crud) UrlEntityTrashAjax() string {
 	return url
 }
 
+func (crud *Crud) UrlEntityRead() string {
+	url := crud.endpoint + "?path=" + pathEntityRead
+	return url
+}
+
 func (crud *Crud) UrlEntityUpdate() string {
 	url := crud.endpoint + "?path=" + pathEntityUpdate
 	return url
@@ -808,12 +920,16 @@ func (crud *Crud) _form(fields []FormField) []*hb.Tag {
 			// formGroupInput = hb.NewTag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
-		}
-
 		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
 			formGroupInput = hb.NewTag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
+		}
+
+		if field.Type == FORM_FIELD_TYPE_NUMBER {
+			formGroupInput.Type(hb.TYPE_NUMBER)
+		}
+
+		if field.Type == FORM_FIELD_TYPE_PASSWORD {
+			formGroupInput.Type(hb.TYPE_PASSWORD)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_SELECT {
@@ -828,6 +944,10 @@ func (crud *Crud) _form(fields []FormField) []*hb.Tag {
 					formGroupInput.AddChild(option)
 				}
 			}
+		}
+
+		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
+			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		formGroup.AddChild(formGroupLabel)
