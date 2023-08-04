@@ -206,7 +206,7 @@ func (crud *Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
 
 func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 	// header := cms.cmsHeader(endpoint)
-	breadcrums := crud._breadcrumbs([]Breadcrumb{
+	breadcrumbs := crud._breadcrumbs([]Breadcrumb{
 		{
 			Name: "Home",
 			URL:  crud.urlHome(),
@@ -298,7 +298,7 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 		ID("entity-manager").
 		Class("container").
 		Child(heading).
-		Child(hb.NewHTML(breadcrums)).
+		Child(hb.NewHTML(breadcrumbs)).
 		Child(crud.pageEntitiesEntityCreateModal()).
 		Child(crud.pageEntitiesEntityTrashModal()).
 		Child(tableContent)
@@ -307,10 +307,12 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 
 	urlEntityCreateAjax, _ := utils.ToJSON(crud.UrlEntityCreateAjax())
 	urlEntityTrashAjax, _ := utils.ToJSON(crud.UrlEntityTrashAjax())
+	urlEntityUpdate, _ := utils.ToJSON(crud.UrlEntityUpdate())
 
 	inlineScript := `
-var entityCreateUrl = ` + urlEntityCreateAjax + `;
-var entityTrashUrl = ` + urlEntityTrashAjax + `;
+const entityCreateUrl = ` + urlEntityCreateAjax + `;
+const entityUpdateUrl = ` + urlEntityUpdate + `;
+const entityTrashUrl = ` + urlEntityTrashAjax + `;
 const EntityManager = {
 	data() {
 		return {
@@ -323,7 +325,7 @@ const EntityManager = {
 	},
 	created(){
 		//setTimeout(() => {
-		//	console.log("Initing data table...");
+		//	console.log("Init data table...");
 			this.initDataTable();
 		//}, 1000);
 	},
@@ -336,18 +338,18 @@ const EntityManager = {
 			});
 		},
         showEntityCreateModal(){
-			var modalEntityCreate = new bootstrap.Modal(document.getElementById('ModalEntityCreate'));
+			const modalEntityCreate = new bootstrap.Modal(document.getElementById('ModalEntityCreate'));
 			modalEntityCreate.show();
 		},
 		showEntityTrashModal(entityId){
 			this.entityTrashModel.entityId = entityId;
-			var modalEntityDelete = new bootstrap.Modal(document.getElementById('ModalEntityTrash'));
+			const modalEntityDelete = new bootstrap.Modal(document.getElementById('ModalEntityTrash'));
 			modalEntityDelete.show();
 		},
 		entityCreate(){
 		    $.post(entityCreateUrl, this.entityModel).done((result)=>{
 				if (result.status==="success"){
-					var modalEntityCreate = new bootstrap.Modal(document.getElementById('ModalEntityCreate'));
+					const modalEntityCreate = new bootstrap.Modal(document.getElementById('ModalEntityCreate'));
 			        modalEntityCreate.hide();
 					return location.href = entityUpdateUrl+ "&entity_id=" + result.data.entity_id;
 				}
@@ -359,7 +361,7 @@ const EntityManager = {
 		},
 
 		entityTrash(){
-			var entityId = this.entityTrashModel.entityId;
+			const entityId = this.entityTrashModel.entityId;
 
 			$.post(entityTrashUrl, {
 				entity_id:entityId
@@ -482,7 +484,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	breadcrums := crud._breadcrumbs([]Breadcrumb{
+	breadcrumbs := crud._breadcrumbs([]Breadcrumb{
 		{
 			Name: "Home",
 			URL:  crud.urlHome(),
@@ -511,7 +513,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 	// container.AddChild(hb.NewHTML(header))
 	container := hb.NewDiv().Attr("class", "container").Attr("id", "entity-update").
 		AddChild(heading).
-		AddChild(hb.NewHTML(breadcrums))
+		AddChild(hb.NewHTML(breadcrumbs))
 
 	customAttrValues, errData := crud.funcFetchUpdateData(entityID)
 
@@ -531,11 +533,11 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 	urlEntityUpdateAjax, _ := utils.ToJSON(crud.UrlEntityUpdateAjax())
 
 	inlineScript := `
-	var entityManagerUrl = ` + urlHome + `;
-	var entityUpdateUrl = ` + urlEntityUpdateAjax + `;
-	var entityTrashUrl = ` + urlEntityTrashAjax + `;
-	var entityId = "` + entityID + `";
-	var customValues = ` + jsonCustomValues + `;
+	const entityManagerUrl = ` + urlHome + `;
+	const entityUpdateUrl = ` + urlEntityUpdateAjax + `;
+	const entityTrashUrl = ` + urlEntityTrashAjax + `;
+	const entityId = "` + entityID + `";
+	const customValues = ` + jsonCustomValues + `;
 	const EntityUpdate = {
 		data() {
 			return {
@@ -565,8 +567,8 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 		},
 		methods: {
 			entitySave(redirect){
-				var entityId = this.entityModel.entityId;
-				var data = JSON.parse(JSON.stringify(this.entityModel));
+				const entityId = this.entityModel.entityId;
+				let data = JSON.parse(JSON.stringify(this.entityModel));
 				data["entity_id"] = data["entityId"];
 				delete data["entityId"];
 
@@ -736,7 +738,7 @@ func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
 	modalBody := hb.NewDiv().Class("modal-body").AddChildren(form)
 
 	modalFooter := hb.NewDiv().Class("modal-footer").
-		AddChild(hb.NewButton().HTML("Close").Class("btn btn-prsecondary").Attr("data-bs-dismiss", "modal")).
+		AddChild(hb.NewButton().HTML("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
 		AddChild(hb.NewButton().HTML("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
 
 	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]*hb.Tag{
