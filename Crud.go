@@ -48,6 +48,7 @@ type CrudConfig struct {
 	HomeURL             string
 	ReadFields          []FormField
 	UpdateFields        []FormField
+	FuncReadExtras      func(entityID string) []*hb.Tag
 }
 
 type Crud struct {
@@ -58,6 +59,7 @@ type Crud struct {
 	entityNameSingular  string
 	fileManagerURL      string
 	funcCreate          func(data map[string]string) (userID string, err error)
+	funcReadExtras      func(entityID string) []*hb.Tag
 	funcFetchReadData   func(entityID string) ([][2]string, error)
 	funcFetchUpdateData func(entityID string) (map[string]string, error)
 	funcLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
@@ -116,6 +118,7 @@ func NewCrud(config CrudConfig) (crud Crud, err error) {
 	crud.entityNameSingular = config.EntityNameSingular
 	crud.fileManagerURL = config.FileManagerURL
 	crud.funcCreate = config.FuncCreate
+	crud.funcReadExtras = config.FuncReadExtras
 	crud.funcFetchReadData = config.FuncFetchReadData
 	crud.funcFetchUpdateData = config.FuncFetchUpdateData
 	crud.funcLayout = config.FuncLayout
@@ -125,12 +128,6 @@ func NewCrud(config CrudConfig) (crud Crud, err error) {
 	crud.homeURL = config.HomeURL
 	crud.readFields = config.ReadFields
 	crud.updateFields = config.UpdateFields
-
-	// crud.pathEntitiesEntityCreateAjax = "entities/entity-create-ajax"
-	// crud.pathEntityManager = "entities/entity-manager"
-	// crud.pathEntityUpdate = "entities/entity-update"
-	// crud.pathEntityUpdateAjax = "entities/entity-update-ajax"
-	// crud.pathEntityTrashAjax = "entities/entity-update-ajax"
 
 	return crud, err
 }
@@ -170,7 +167,7 @@ func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Req
 }
 
 func (crud *Crud) pageEntityCreateAjax(w http.ResponseWriter, r *http.Request) {
-	names := crud._listCreateNames()
+	names := crud.listCreateNames()
 
 	posts := map[string]string{}
 	for _, name := range names {
@@ -254,26 +251,27 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 				hb.NewTbody().
 					Children(lo.Map(rows, func(row Row, _ int) *hb.Tag {
 						buttonView := hb.NewHyperlink().
-							Class("btn btn-primary btn-sm").
-							Child(icons.Icon("bi-eye", 12, 12, "white").
-								Style("margin-top:-4px;margin-right:4px;")).
-							HTML("Show").
+							Class("btn btn-sm btn-outline-info").
+							Child(icons.Icon("bi-eye", 18, 18, "#333").
+								Style("margin-top:-4px;")).
+							Attr("title", "Show").
 							Href(crud.UrlEntityRead() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
 						buttonEdit := hb.NewHyperlink().
-							Class("btn btn-primary btn-sm").
-							Child(icons.Icon("bi-pencil-square", 12, 12, "white").
-								Style("margin-top:-4px;margin-right:4px;")).
-							HTML("Edit").
+							Class("btn btn-sm btn-outline-warning").
+							Child(icons.Icon("bi-pencil-square", 18, 18, "#333").
+								Style("margin-top:-4px;")).
+							Attr("title", "Edit").
 							Attr("type", "button").
 							Href(crud.UrlEntityUpdate() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
 						buttonTrash := hb.NewButton().
-							Class("btn btn-danger btn-sm").
-							Child(icons.Icon("bi-trash", 12, 12, "white").Style("margin-top:-4px;margin-right:4px;")).
-							HTML("Trash").
+							Class("btn btn-sm btn-outline-danger").
+							Child(icons.Icon("bi-trash", 18, 18, "#333").
+								Style("margin-top:-4px;")).
+							Attr("title", "Trash").
 							Attr("type", "button").
 							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
 
@@ -383,7 +381,7 @@ const EntityManager = {
 Vue.createApp(EntityManager).mount('#entity-manager')
 	`
 	title := crud.entityNameSingular + " Manager"
-	html := crud._layout(w, r, title, content, []string{
+	html := crud.layout(w, r, title, content, []string{
 		cdn.JqueryDataTablesCss_1_13_4(),
 	}, "html{width:100%;}", []string{
 		cdn.JqueryDataTablesJs_1_13_4(),
@@ -468,9 +466,29 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 		return table
 	})
 
-	content := container.Child(table).ToHTML()
+	card := hb.NewDiv().
+		Class("card").
+		Child(
+			hb.NewDiv().
+				Class("card-header").
+				Style(`display:flex;justify-content:space-between;align-items:center;`).
+				Child(hb.NewHeading4().
+					HTML(crud.entityNameSingular + " Details").
+					Style("margin-bottom:0;display:inline-block;")).
+				Child(buttonEdit),
+		).
+		Child(
+			hb.NewDiv().
+				Class("card-body").
+				Child(table))
+
+	container.Child(card)
+	if crud.funcReadExtras != nil {
+		container.Children(crud.funcReadExtras(entityID))
+	}
+	content := container.ToHTML()
 	title := "View " + crud.entityNameSingular
-	html := crud._layout(w, r, title, content, []string{}, "", []string{}, "")
+	html := crud.layout(w, r, title, content, []string{}, "", []string{}, "")
 
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
@@ -522,7 +540,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	container.AddChildren(crud._form(crud.updateFields))
+	container.AddChildren(crud.form(crud.updateFields))
 
 	content := container.ToHTML()
 
@@ -598,7 +616,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 	// webpage.AddScript(inlineScript)
 
 	title := "Edit " + crud.entityNameSingular
-	html := crud._layout(w, r, title, content, []string{
+	html := crud.layout(w, r, title, content, []string{
 		cdn.JqueryDataTablesCss_1_13_4(),
 		cdn.TrumbowygCss_2_27_3(),
 	}, "", []string{
@@ -621,7 +639,7 @@ func (crud *Crud) pageEntityUpdateAjax(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	names := crud._listUpdateNames()
+	names := crud.listUpdateNames()
 	posts := map[string]string{}
 	for _, name := range names {
 		posts[name] = utils.Req(r, name, "")
@@ -689,48 +707,7 @@ func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 }
 
 func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
-	// fields := []*hb.Tag{}
-	// for _, field := range crud.createFields {
-	// 	attrName := field.Name
-	// 	attrFormControlLabel := field.Label
-	// 	if attrFormControlLabel == "" {
-	// 		attrFormControlLabel = attrName
-	// 	}
-
-	// 	formGroupAttrLabel := hb.NewLabel().
-	// 		HTML(attrFormControlLabel).
-	// 		Class("form-label").
-	// 		ChildIf(
-	// 			field.Required,
-	// 			hb.NewSup().HTML("*").Class("text-danger ml-1"),
-	// 		)
-
-	// 	formGroupAttrInput := hb.NewInput().
-	// 		Class("form-control").
-	// 		Attr("v-model", "entityCreateModel."+attrName)
-
-	// 	if field.Type == "textarea" {
-	// 		formGroupAttrInput = hb.NewTextArea().
-	// 			Class("form-control").
-	// 			Attr("v-model", "entityCreateModel."+attrName)
-	// 	}
-
-	// 	formGroupAttr := hb.NewDiv().
-	// 		Class("form-group mt-3").Children([]*hb.Tag{
-	// 		formGroupAttrLabel,
-	// 		formGroupAttrInput,
-	// 	})
-
-	// 	// Add help
-	// 	if field.Help != "" {
-	// 		formGroupAttrHelp := hb.NewParagraph().Attr("class", "text-info").HTML(field.Help)
-	// 		formGroupAttr.AddChild(formGroupAttrHelp)
-	// 	}
-
-	// 	fields = append(fields, formGroupAttr)
-	// }
-
-	form := crud._form(crud.createFields)
+	form := crud.form(crud.createFields)
 
 	modalHeader := hb.NewDiv().Class("modal-header").
 		AddChild(hb.NewHeading5().HTML("New " + crud.entityNameSingular))
@@ -845,6 +822,7 @@ func (crud *Crud) webpage(title, content string) *hb.Webpage {
 func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
 	nav := hb.NewNav().Attr("aria-label", "breadcrumb")
 	ol := hb.NewOL().Attr("class", "breadcrumb")
+
 	for _, breadcrumb := range breadcrumbs {
 		li := hb.NewLI().Attr("class", "breadcrumb-item")
 		link := hb.NewHyperlink().HTML(breadcrumb.Name).Attr("href", breadcrumb.URL)
@@ -853,11 +831,27 @@ func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
 
 		ol.AddChild(li)
 	}
+
 	nav.AddChild(ol)
+
 	return nav.ToHTML()
 }
 
-func (crud *Crud) _layout(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string {
+// layout is a function that generates an HTML layout for a web page.
+//
+// Parameters:
+// - w: an http.ResponseWriter object for writing the HTTP response.
+// - r: a pointer to an http.Request object representing the HTTP request.
+// - title: a string containing the title of the web page.
+// - content: a string containing the content of the web page.
+// - styleFiles: a slice of strings representing the URLs of the style files to be included in the web page.
+// - style: a string containing the CSS style to be applied to the web page.
+// - jsFiles: a slice of strings representing the URLs of the JavaScript files to be included in the web page.
+// - js: a string containing the JavaScript code to be executed in the web page.
+//
+// Returns:
+// - string - a string representing the generated HTML layout.
+func (crud *Crud) layout(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string {
 	html := ""
 
 	if crud.funcLayout != nil {
@@ -879,7 +873,14 @@ func (crud *Crud) _layout(w http.ResponseWriter, r *http.Request, title string, 
 	return html
 }
 
-func (crud *Crud) _form(fields []FormField) []*hb.Tag {
+// form generates a form with entries for each form field.
+//
+// Parameters:
+// - fields: a slice of FormField structs representing the fields in the form.
+//
+// Returns:
+// - a slice of hb.Tags representing the form.
+func (crud *Crud) form(fields []FormField) []*hb.Tag {
 	tags := []*hb.Tag{}
 	for _, field := range fields {
 		fieldName := field.Name
@@ -967,24 +968,44 @@ func (crud *Crud) _form(fields []FormField) []*hb.Tag {
 	return tags
 }
 
-func (crud *Crud) _listCreateNames() []string {
+// listCreateNames returns a list of names from the createFields
+// slice in the Crud struct.
+//
+// Parameters:
+//   - None
+//
+// Returns:
+//   - []string - a list of field names
+func (crud *Crud) listCreateNames() []string {
 	names := []string{}
+
 	for _, field := range crud.createFields {
 		if field.Name == "" {
 			continue
 		}
 		names = append(names, field.Name)
 	}
+
 	return names
 }
 
-func (crud *Crud) _listUpdateNames() []string {
+// listUpdateNames returns a list of names from the updateFields
+// slice in the Crud struct.
+//
+// Parameters:
+//   - None
+//
+// Returns:
+//   - []string - a list of field names
+func (crud *Crud) listUpdateNames() []string {
 	names := []string{}
+
 	for _, field := range crud.updateFields {
 		if field.Name == "" {
 			continue
 		}
 		names = append(names, field.Name)
 	}
+
 	return names
 }
