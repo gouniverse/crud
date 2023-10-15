@@ -28,6 +28,7 @@ const FORM_FIELD_TYPE_TEXTAREA = "textarea"
 const FORM_FIELD_TYPE_SELECT = "select"
 const FORM_FIELD_TYPE_IMAGE = "image"
 const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
+const FORM_FIELD_TYPE_BLOCKAREA = "blockarea"
 const FORM_FIELD_TYPE_DATETIME = "datetime"
 const FORM_FIELD_TYPE_PASSWORD = "password"
 
@@ -81,6 +82,7 @@ type FormFieldOption struct {
 }
 
 type FormField struct {
+	ID       string
 	Type     string
 	Name     string
 	Label    string
@@ -883,6 +885,10 @@ func (crud *Crud) layout(w http.ResponseWriter, r *http.Request, title string, c
 func (crud *Crud) form(fields []FormField) []*hb.Tag {
 	tags := []*hb.Tag{}
 	for _, field := range fields {
+		fieldID := field.ID
+		if fieldID == "" {
+			fieldID = "id_" + utils.StrRandomFromGamma(32, "abcdefghijklmnopqrstuvwxyz1234567890")
+		}
 		fieldName := field.Name
 		fieldLabel := field.Label
 		if fieldLabel == "" {
@@ -953,6 +959,11 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
+		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+		}
+
+		formGroupInput.ID(fieldID)
 		formGroup.AddChild(formGroupLabel)
 		formGroup.AddChild(formGroupInput)
 
@@ -963,6 +974,19 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 		}
 
 		tags = append(tags, formGroup)
+
+		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+			script := hb.NewScript(`setTimeout(() => {
+				const blockArea = new BlockArea('` + fieldID + `');
+				blockArea.registerBlock(BlockAreaHeading);
+				blockArea.registerBlock(BlockAreaText);
+				blockArea.registerBlock(BlockAreaImage);
+				blockArea.registerBlock(BlockAreaCode);
+				blockArea.registerBlock(BlockAreaRawHtml);
+				blockArea.init();
+			}, 2000)`)
+			tags = append(tags, script)
+		}
 	}
 
 	return tags
