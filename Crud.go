@@ -31,6 +31,7 @@ const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
 const FORM_FIELD_TYPE_BLOCKAREA = "blockarea"
 const FORM_FIELD_TYPE_DATETIME = "datetime"
 const FORM_FIELD_TYPE_PASSWORD = "password"
+const FORM_FIELD_TYPE_RAW = "raw"
 
 type CrudConfig struct {
 	ColumnNames         []string
@@ -85,6 +86,7 @@ type FormField struct {
 	ID       string
 	Type     string
 	Name     string
+	Value    string
 	Label    string
 	Help     string
 	Options  []FormFieldOption
@@ -890,6 +892,7 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			fieldID = "id_" + utils.StrRandomFromGamma(32, "abcdefghijklmnopqrstuvwxyz1234567890")
 		}
 		fieldName := field.Name
+		fieldValue := field.Value
 		fieldLabel := field.Label
 		if fieldLabel == "" {
 			fieldLabel = fieldName
@@ -963,8 +966,14 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
+		if field.Type == FORM_FIELD_TYPE_RAW {
+			formGroupInput = hb.NewHTML(fieldValue)
+		}
+
 		formGroupInput.ID(fieldID)
-		formGroup.AddChild(formGroupLabel)
+		if field.Type != FORM_FIELD_TYPE_RAW {
+			formGroup.AddChild(formGroupLabel)
+		}
 		formGroup.AddChild(formGroupInput)
 
 		// Add help
