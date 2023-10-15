@@ -28,7 +28,6 @@ const FORM_FIELD_TYPE_TEXTAREA = "textarea"
 const FORM_FIELD_TYPE_SELECT = "select"
 const FORM_FIELD_TYPE_IMAGE = "image"
 const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
-const FORM_FIELD_TYPE_BLOCKAREA = "blockarea"
 const FORM_FIELD_TYPE_DATETIME = "datetime"
 const FORM_FIELD_TYPE_PASSWORD = "password"
 const FORM_FIELD_TYPE_RAW = "raw"
@@ -962,10 +961,6 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
-		}
-
 		if field.Type == FORM_FIELD_TYPE_RAW {
 			formGroupInput = hb.NewHTML(fieldValue)
 		}
@@ -983,19 +978,6 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 		}
 
 		tags = append(tags, formGroup)
-
-		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			script := hb.NewScript(`setTimeout(() => {
-				const blockArea = new BlockArea('` + fieldID + `');
-				blockArea.registerBlock(BlockAreaHeading);
-				blockArea.registerBlock(BlockAreaText);
-				blockArea.registerBlock(BlockAreaImage);
-				blockArea.registerBlock(BlockAreaCode);
-				blockArea.registerBlock(BlockAreaRawHtml);
-				blockArea.init();
-			}, 2000)`)
-			tags = append(tags, script)
-		}
 	}
 
 	return tags
