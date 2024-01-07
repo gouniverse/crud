@@ -27,7 +27,9 @@ const FORM_FIELD_TYPE_STRING = "string"
 const FORM_FIELD_TYPE_TEXTAREA = "textarea"
 const FORM_FIELD_TYPE_SELECT = "select"
 const FORM_FIELD_TYPE_IMAGE = "image"
+const FORM_FIELD_TYPE_IMAGE_INLINE = "image_inline"
 const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
+const FORM_FIELD_TYPE_BLOCKAREA = "blockarea"
 const FORM_FIELD_TYPE_DATETIME = "datetime"
 const FORM_FIELD_TYPE_PASSWORD = "password"
 const FORM_FIELD_TYPE_RAW = "raw"
@@ -566,6 +568,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 					entityId,
 					...customValues
 			    },
+				tmp:{},
 				trumbowigConfig: {
 					btns: [
 						['undo', 'redo'], 
@@ -609,6 +612,17 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 					console.log(result);
 					return Swal.fire({icon: 'error', title: 'Oops...', text: result});
 				});
+			},
+			uploadImage(event, fieldName) {
+				const self = this;
+				if ( event.target.files && event.target.files[0] ) {
+					var FR= new FileReader();
+					FR.onload = function(e) {
+						self.entityModel[fieldName] = e.target.result;
+						event.target.value = "";
+					};       
+					FR.readAsDataURL( event.target.files[0] );
+				}
 			}
 		}
 	};
@@ -925,6 +939,27 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			})
 		}
 
+		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
+			formGroupInput = hb.NewDiv().
+				Children([]*hb.Tag{
+					hb.NewImage().
+						Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
+						Style(`width:200px;`),
+					hb.NewInput().
+						Type(hb.TYPE_FILE).
+						Attr("v-on:change", "uploadImage($event, '"+fieldName+"')").
+						Attr("accept", "image/*"),
+					hb.NewButton().
+						HTML("See Image Data").
+						Attr("v-on:click", "tmp.show_url_"+fieldName+" = !tmp.show_url_"+fieldName),
+					hb.NewTextArea().
+						Type(hb.TYPE_URL).
+						Class("form-control").
+						Attr("v-if", "tmp.show_url_"+fieldName).
+						Attr("v-model", "entityModel."+fieldName),
+				})
+		}
+
 		if field.Type == FORM_FIELD_TYPE_DATETIME {
 			// formGroupInput = hb.NewInput().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
 			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
@@ -961,6 +996,10 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
+		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+		}
+
 		if field.Type == FORM_FIELD_TYPE_RAW {
 			formGroupInput = hb.NewHTML(fieldValue)
 		}
@@ -978,6 +1017,21 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 		}
 
 		tags = append(tags, formGroup)
+
+		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+			script := hb.NewTag(`component`).
+				Attr(`:is`, `'script'`).
+				HTML(`setTimeout(() => {
+				const blockArea = new BlockArea('` + fieldID + `');
+				blockArea.registerBlock(BlockAreaHeading);
+				blockArea.registerBlock(BlockAreaText);
+				blockArea.registerBlock(BlockAreaImage);
+				blockArea.registerBlock(BlockAreaCode);
+				blockArea.registerBlock(BlockAreaRawHtml);
+				blockArea.init();
+			}, 2000)`)
+			tags = append(tags, script)
+		}
 	}
 
 	return tags
