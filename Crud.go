@@ -282,7 +282,11 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 
 						tr := hb.NewTR().
 							Children(lo.Map(row.Data, func(cell string, _ int) *hb.Tag {
-								return hb.NewTD().HTML(cell)
+								isRaw := strings.HasPrefix(cell, "{!!") && strings.HasSuffix(cell, "!!}")
+								cell = strings.ReplaceAll(cell, "{!!", "")
+								cell = strings.ReplaceAll(cell, "!!}", "")
+								cell = strings.TrimSpace(cell)
+								return hb.NewTD().TextIf(!isRaw, cell).HTMLIf(isRaw, cell)
 							})).
 							Child(
 								hb.NewTD().
