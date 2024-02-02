@@ -246,7 +246,9 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 					Children([]*hb.Tag{
 						hb.NewTR().
 							Children(lo.Map(crud.columnNames, func(columnName string, _ int) *hb.Tag {
-								return hb.NewTH().HTML(columnName)
+								columnName = strings.ReplaceAll(columnName, "{!!", "")
+								columnName = strings.ReplaceAll(columnName, "!!}", "")
+								return hb.NewTH().Text(columnName)
 							})).
 							Child(hb.NewTD().
 								HTML("Actions").
@@ -281,8 +283,9 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
 
 						tr := hb.NewTR().
-							Children(lo.Map(row.Data, func(cell string, _ int) *hb.Tag {
-								isRaw := strings.HasPrefix(cell, "{!!") && strings.HasSuffix(cell, "!!}")
+							Children(lo.Map(row.Data, func(cell string, index int) *hb.Tag {
+								name := crud.columnNames[index]
+								isRaw := strings.HasPrefix(name, "{!!") && strings.HasSuffix(name, "!!}")
 								cell = strings.ReplaceAll(cell, "{!!", "")
 								cell = strings.ReplaceAll(cell, "!!}", "")
 								cell = strings.TrimSpace(cell)
@@ -467,8 +470,8 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 				key := row[0]
 				value := row[1]
 				return hb.NewTR().Children([]*hb.Tag{
-					hb.NewTH().HTML(key),
-					hb.NewTD().HTML(value),
+					hb.NewTH().Text(key),
+					hb.NewTD().Text(value),
 				})
 			})))
 
@@ -533,7 +536,7 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 		Style("margin-right:10px;").
 		AddChild(icons.Icon("bi-check", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Apply")
-	heading := hb.NewHeading1().HTML("Edit " + crud.entityNameSingular).
+	heading := hb.NewHeading1().Text("Edit " + crud.entityNameSingular).
 		AddChild(buttonSave).
 		AddChild(buttonApply)
 
@@ -715,12 +718,12 @@ func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 	modal := hb.NewDiv().ID("ModalEntityTrash").Class("modal fade")
 	modalDialog := hb.NewDiv().Attr("class", "modal-dialog")
 	modalContent := hb.NewDiv().Attr("class", "modal-content")
-	modalHeader := hb.NewDiv().Attr("class", "modal-header").AddChild(hb.NewHeading5().HTML("Trash Entity"))
+	modalHeader := hb.NewDiv().Attr("class", "modal-header").AddChild(hb.NewHeading5().Text("Trash Entity"))
 	modalBody := hb.NewDiv().Attr("class", "modal-body")
-	modalBody.AddChild(hb.NewParagraph().HTML("Are you sure you want to move this entity to trash bin?"))
+	modalBody.AddChild(hb.NewParagraph().Text("Are you sure you want to move this entity to trash bin?"))
 	modalFooter := hb.NewDiv().Attr("class", "modal-footer")
-	modalFooter.AddChild(hb.NewButton().HTML("Close").Attr("class", "btn btn-secondary").Attr("data-bs-dismiss", "modal"))
-	modalFooter.AddChild(hb.NewButton().HTML("Move to trash bin").Attr("class", "btn btn-danger").Attr("v-on:click", "entityTrash"))
+	modalFooter.AddChild(hb.NewButton().Text("Close").Attr("class", "btn btn-secondary").Attr("data-bs-dismiss", "modal"))
+	modalFooter.AddChild(hb.NewButton().Text("Move to trash bin").Attr("class", "btn btn-danger").Attr("v-on:click", "entityTrash"))
 	modalContent.AddChild(modalHeader).AddChild(modalBody).AddChild(modalFooter)
 	modalDialog.AddChild(modalContent)
 	modal.AddChild(modalDialog)
@@ -731,13 +734,13 @@ func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
 	form := crud.form(crud.createFields)
 
 	modalHeader := hb.NewDiv().Class("modal-header").
-		AddChild(hb.NewHeading5().HTML("New " + crud.entityNameSingular))
+		AddChild(hb.NewHeading5().Text("New " + crud.entityNameSingular))
 
 	modalBody := hb.NewDiv().Class("modal-body").AddChildren(form)
 
 	modalFooter := hb.NewDiv().Class("modal-footer").
-		AddChild(hb.NewButton().HTML("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
-		AddChild(hb.NewButton().HTML("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
+		AddChild(hb.NewButton().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
+		AddChild(hb.NewButton().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
 
 	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]*hb.Tag{
 		hb.NewDiv().Class("modal-dialog").AddChildren([]*hb.Tag{
@@ -846,7 +849,7 @@ func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
 
 	for _, breadcrumb := range breadcrumbs {
 		li := hb.NewLI().Attr("class", "breadcrumb-item")
-		link := hb.NewHyperlink().HTML(breadcrumb.Name).Attr("href", breadcrumb.URL)
+		link := hb.NewHyperlink().Text(breadcrumb.Name).Attr("href", breadcrumb.URL)
 
 		li.AddChild(link)
 
@@ -918,11 +921,11 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 		formGroup := hb.NewDiv().Class("form-group mt-3")
 
 		formGroupLabel := hb.NewLabel().
-			HTML(fieldLabel).
+			Text(fieldLabel).
 			Class("form-label").
 			ChildIf(
 				field.Required,
-				hb.NewSup().HTML("*").Class("text-danger ml-1"),
+				hb.NewSup().Text("*").Class("text-danger ml-1"),
 			)
 
 		formGroupInput := hb.NewInput().
@@ -937,7 +940,7 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 				bs.InputGroup().Children([]*hb.Tag{
 					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
 					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]*hb.Tag{
-						hb.NewHyperlink().HTML("Browse").Href(crud.fileManagerURL).Target("_blank"),
+						hb.NewHyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
 					})),
 				}),
 			})
@@ -985,12 +988,12 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 		if field.Type == FORM_FIELD_TYPE_SELECT {
 			formGroupInput = hb.NewSelect().Class("form-select").Attr("v-model", "entityModel."+fieldName)
 			for _, opt := range field.Options {
-				option := hb.NewOption().Value(opt.Key).HTML(opt.Value)
+				option := hb.NewOption().Value(opt.Key).Text(opt.Value)
 				formGroupInput.AddChild(option)
 			}
 			if field.OptionsF != nil {
 				for _, opt := range field.OptionsF() {
-					option := hb.NewOption().Value(opt.Key).HTML(opt.Value)
+					option := hb.NewOption().Value(opt.Key).Text(opt.Value)
 					formGroupInput.AddChild(option)
 				}
 			}
