@@ -769,32 +769,38 @@ func (crud *Crud) urlHome() string {
 }
 
 func (crud *Crud) UrlEntityManager() string {
-	url := crud.endpoint + "?path=" + pathEntityManager
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityManager
 	return url
 }
 
 func (crud *Crud) UrlEntityCreateAjax() string {
-	url := crud.endpoint + "?path=" + pathEntityCreateAjax
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityCreateAjax
 	return url
 }
 
 func (crud *Crud) UrlEntityTrashAjax() string {
-	url := crud.endpoint + "?path=" + pathEntityTrashAjax
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityTrashAjax
 	return url
 }
 
 func (crud *Crud) UrlEntityRead() string {
-	url := crud.endpoint + "?path=" + pathEntityRead
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityRead
 	return url
 }
 
 func (crud *Crud) UrlEntityUpdate() string {
-	url := crud.endpoint + "?path=" + pathEntityUpdate
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityUpdate
 	return url
 }
 
 func (crud *Crud) UrlEntityUpdateAjax() string {
-	url := crud.endpoint + "?path=" + pathEntityUpdateAjax
+	q := lo.Ternary(strings.Contains(crud.endpoint, "?"), "&", "?")
+	url := crud.endpoint + q + "path=" + pathEntityUpdateAjax
 	return url
 }
 
