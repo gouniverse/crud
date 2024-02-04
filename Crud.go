@@ -319,14 +319,22 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 	urlEntityTrashAjax, _ := utils.ToJSON(crud.UrlEntityTrashAjax())
 	urlEntityUpdate, _ := utils.ToJSON(crud.UrlEntityUpdate())
 
+	customAttrValues := map[string]string{}
+	lo.ForEach(crud.createFields, func(field FormField, index int) {
+		customAttrValues[field.Name] = field.Value
+	})
+	jsonCustomValues, _ := utils.ToJSON(customAttrValues)
+
 	inlineScript := `
 const entityCreateUrl = ` + urlEntityCreateAjax + `;
 const entityUpdateUrl = ` + urlEntityUpdate + `;
 const entityTrashUrl = ` + urlEntityTrashAjax + `;
+const customValues = ` + jsonCustomValues + `;
 const EntityManager = {
 	data() {
 		return {
 		  entityModel:{
+			...customValues
 		  },
 		  entityTrashModel:{
 			entityId:null,
