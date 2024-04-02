@@ -16,6 +16,27 @@ Compatible with https://github.com/gouniverse/dashboard to create dashboards fas
 Create a handler like the example bellow, and attach to your router
 
 ```go
+fieldsCreate := []crud.FormField{
+	{
+		Type:  "string",
+		Label: "Name",
+		Name:  "name",
+	},
+}
+
+fieldsUpdate := []crud.FormField{
+	{
+		Type:  "string",
+		Label: "First Name",
+		Name:  "first_name",
+	},
+	{
+		Type:  "string",
+		Label: "Last Name",
+		Name:  "last_name",
+	},
+}
+
 func crudHandler(w http.ResponseWriter, r *http.Request) {
 	crudInstance, err := crud.NewCrud(crud.CrudConfig{
 		Endpoint:           "/crud",
@@ -23,27 +44,10 @@ func crudHandler(w http.ResponseWriter, r *http.Request) {
 		EntityNameSingular: "User",
 		EntityNamePlural:   "Users",
 		ColumnNames:        []string{"First Name", "Last Name"},
-		CreateFields: []crud.FormField{
-			{
-				Type:  "string",
-				Label: "Name",
-				Name:  "name",
-			},
-		},
-		UpdateFields: []crud.FormField{
-			{
-				Type:  "string",
-				Label: "First Name",
-				Name:  "first_name",
-			},
-			{
-				Type:  "string",
-				Label: "Last Name",
-				Name:  "last_name",
-			},
-		},
+		CreateFields: fieldsCreate,
+		UpdateFields: fieldsUpdate,
 		FuncRows: func() ([]crud.Row, error) {
-            // Your logic for fetching your users from DB
+                        // Your logic for fetching your users from DB
 			return []crud.Row{
 				{
 					ID:   "ID1",
@@ -75,7 +79,7 @@ func crudHandler(w http.ResponseWriter, r *http.Request) {
 			// Your logic for fetching an existing user from DB
 			return map[string]string{
 				"first_name": "Charles",
-                "last_name": "Dickens",
+				"last_name": "Dickens",
 			}, nil
 		},
 	})
