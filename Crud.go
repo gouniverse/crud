@@ -477,9 +477,20 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) *hb.Tag {
 				key := row[0]
 				value := row[1]
+				isRawKey := strings.HasPrefix(key, "{!!") && strings.HasSuffix(key, "!!}")
+				isRawValue := strings.HasPrefix(value, "{!!") && strings.HasSuffix(value, "!!}")
+
+				key = strings.ReplaceAll(key, "{!!", "")
+				key = strings.ReplaceAll(key, "!!}", "")
+				key = strings.TrimSpace(key)
+
+				value = strings.ReplaceAll(value, "{!!", "")
+				value = strings.ReplaceAll(value, "!!}", "")
+				value = strings.TrimSpace(value)
+
 				return hb.NewTR().Children([]*hb.Tag{
-					hb.NewTH().Text(key),
-					hb.NewTD().Text(value),
+					hb.NewTH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
+					hb.NewTD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
 				})
 			})))
 
