@@ -51,7 +51,7 @@ type CrudConfig struct {
 	HomeURL             string
 	ReadFields          []FormField
 	UpdateFields        []FormField
-	FuncReadExtras      func(entityID string) []*hb.Tag
+	FuncReadExtras      func(entityID string) []hb.TagInterface
 }
 
 type Crud struct {
@@ -62,7 +62,7 @@ type Crud struct {
 	entityNameSingular  string
 	fileManagerURL      string
 	funcCreate          func(data map[string]string) (userID string, err error)
-	funcReadExtras      func(entityID string) []*hb.Tag
+	funcReadExtras      func(entityID string) []hb.TagInterface
 	funcFetchReadData   func(entityID string) ([][2]string, error)
 	funcFetchUpdateData func(entityID string) (map[string]string, error)
 	funcLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
@@ -243,9 +243,9 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 			Class("table table-responsive table-striped mt-3").
 			Child(
 				hb.NewThead().
-					Children([]*hb.Tag{
+					Children([]hb.TagInterface{
 						hb.NewTR().
-							Children(lo.Map(crud.columnNames, func(columnName string, _ int) *hb.Tag {
+							Children(lo.Map(crud.columnNames, func(columnName string, _ int) hb.TagInterface {
 								columnName = strings.ReplaceAll(columnName, "{!!", "")
 								columnName = strings.ReplaceAll(columnName, "!!}", "")
 								return hb.NewTH().Text(columnName)
@@ -256,7 +256,7 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 					})).
 			Child(
 				hb.NewTbody().
-					Children(lo.Map(rows, func(row Row, _ int) *hb.Tag {
+					Children(lo.Map(rows, func(row Row, _ int) hb.TagInterface {
 						buttonView := hb.NewHyperlink().
 							Class("btn btn-sm btn-outline-info").
 							Child(icons.Icon("bi-eye", 18, 18, "#333").
@@ -283,7 +283,7 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
 
 						tr := hb.NewTR().
-							Children(lo.Map(row.Data, func(cell string, index int) *hb.Tag {
+							Children(lo.Map(row.Data, func(cell string, index int) hb.TagInterface {
 								name := crud.columnNames[index]
 								isRaw := strings.HasPrefix(name, "{!!") && strings.HasSuffix(name, "!!}")
 								cell = strings.ReplaceAll(cell, "{!!", "")
@@ -474,7 +474,7 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 		table := hb.NewTable().
 			Class("table table-hover table-striped").
 			Child(hb.NewThead().Child(hb.NewTR())).
-			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) *hb.Tag {
+			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) hb.TagInterface {
 				key := row[0]
 				value := row[1]
 				isRawKey := strings.HasPrefix(key, "{!!") && strings.HasSuffix(key, "!!}")
@@ -488,7 +488,7 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 				value = strings.ReplaceAll(value, "!!}", "")
 				value = strings.TrimSpace(value)
 
-				return hb.NewTR().Children([]*hb.Tag{
+				return hb.NewTR().Children([]hb.TagInterface{
 					hb.NewTH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
 					hb.NewTD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
 				})
@@ -761,9 +761,9 @@ func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
 		AddChild(hb.NewButton().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
 		AddChild(hb.NewButton().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
 
-	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]*hb.Tag{
-		hb.NewDiv().Class("modal-dialog").AddChildren([]*hb.Tag{
-			hb.NewDiv().Class("modal-content").AddChildren([]*hb.Tag{
+	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]hb.TagInterface{
+		hb.NewDiv().Class("modal-dialog").AddChildren([]hb.TagInterface{
+			hb.NewDiv().Class("modal-content").AddChildren([]hb.TagInterface{
 				modalHeader,
 				modalBody,
 				modalFooter,
@@ -929,8 +929,8 @@ func (crud *Crud) layout(w http.ResponseWriter, r *http.Request, title string, c
 //
 // Returns:
 // - a slice of hb.Tags representing the form.
-func (crud *Crud) form(fields []FormField) []*hb.Tag {
-	tags := []*hb.Tag{}
+func (crud *Crud) form(fields []FormField) []hb.TagInterface {
+	tags := []hb.TagInterface{}
 	for _, field := range fields {
 		fieldID := field.ID
 		if fieldID == "" {
@@ -958,13 +958,13 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 			Attr("v-model", "entityModel."+fieldName)
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE {
-			formGroupInput = hb.NewDiv().Children([]*hb.Tag{
+			formGroupInput = hb.NewDiv().Children([]hb.TagInterface{
 				hb.NewImage().
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 					Style(`width:200px;`),
-				bs.InputGroup().Children([]*hb.Tag{
+				bs.InputGroup().Children([]hb.TagInterface{
 					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
-					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]*hb.Tag{
+					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]hb.TagInterface{
 						hb.NewHyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
 					})),
 				}),
@@ -973,7 +973,7 @@ func (crud *Crud) form(fields []FormField) []*hb.Tag {
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
 			formGroupInput = hb.NewDiv().
-				Children([]*hb.Tag{
+				Children([]hb.TagInterface{
 					hb.NewImage().
 						Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 						Style(`width:200px;`),
