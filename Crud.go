@@ -2,7 +2,6 @@ package crud
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -14,45 +13,6 @@ import (
 	"github.com/gouniverse/utils"
 	"github.com/samber/lo"
 )
-
-const pathEntityCreateAjax = "entity-create-ajax"
-const pathEntityManager = "entity-manager"
-const pathEntityRead = "entity-read"
-const pathEntityUpdate = "entity-update"
-const pathEntityUpdateAjax = "entity-update-ajax"
-const pathEntityTrashAjax = "entity-trash-ajax"
-
-const FORM_FIELD_TYPE_NUMBER = "number"
-const FORM_FIELD_TYPE_STRING = "string"
-const FORM_FIELD_TYPE_TEXTAREA = "textarea"
-const FORM_FIELD_TYPE_SELECT = "select"
-const FORM_FIELD_TYPE_IMAGE = "image"
-const FORM_FIELD_TYPE_IMAGE_INLINE = "image_inline"
-const FORM_FIELD_TYPE_HTMLAREA = "htmlarea"
-const FORM_FIELD_TYPE_BLOCKAREA = "blockarea"
-const FORM_FIELD_TYPE_DATETIME = "datetime"
-const FORM_FIELD_TYPE_PASSWORD = "password"
-const FORM_FIELD_TYPE_RAW = "raw"
-
-type CrudConfig struct {
-	ColumnNames         []string
-	CreateFields        []FormField
-	Endpoint            string
-	EntityNamePlural    string
-	EntityNameSingular  string
-	FileManagerURL      string
-	FuncCreate          func(data map[string]string) (userID string, err error)
-	FuncFetchReadData   func(entityID string) ([][2]string, error)
-	FuncFetchUpdateData func(entityID string) (map[string]string, error)
-	FuncLayout          func(w http.ResponseWriter, r *http.Request, title string, content string, styleFiles []string, style string, jsFiles []string, js string) string
-	FuncRows            func() (rows []Row, err error)
-	FuncTrash           func(entityID string) error
-	FuncUpdate          func(entityID string, data map[string]string) error
-	HomeURL             string
-	ReadFields          []FormField
-	UpdateFields        []FormField
-	FuncReadExtras      func(entityID string) []hb.TagInterface
-}
 
 type Crud struct {
 	columnNames         []string
@@ -72,69 +32,6 @@ type Crud struct {
 	homeURL             string
 	readFields          []FormField
 	updateFields        []FormField
-}
-
-type Breadcrumb struct {
-	Name string
-	URL  string
-}
-type FormFieldOption struct {
-	Key   string
-	Value string
-}
-
-type FormField struct {
-	ID       string
-	Type     string
-	Name     string
-	Value    string
-	Label    string
-	Help     string
-	Options  []FormFieldOption
-	OptionsF func() []FormFieldOption
-	Required bool
-}
-
-type Row struct {
-	ID   string
-	Data []string
-}
-
-func NewCrud(config CrudConfig) (crud Crud, err error) {
-	if config.FuncRows == nil {
-		return Crud{}, errors.New("FuncRows function is required")
-	}
-
-	if config.UpdateFields == nil {
-		return Crud{}, errors.New("UpdateFields is required")
-	}
-
-	isUpdateEnabled := config.FuncUpdate != nil && config.FuncFetchUpdateData != nil && len(config.UpdateFields) > 0
-
-	if isUpdateEnabled && config.FuncUpdate == nil {
-		return Crud{}, errors.New("FuncUpdate function is required")
-	}
-
-	crud = Crud{}
-	crud.columnNames = config.ColumnNames
-	crud.createFields = config.CreateFields
-	crud.endpoint = config.Endpoint
-	crud.entityNamePlural = config.EntityNamePlural
-	crud.entityNameSingular = config.EntityNameSingular
-	crud.fileManagerURL = config.FileManagerURL
-	crud.funcCreate = config.FuncCreate
-	crud.funcReadExtras = config.FuncReadExtras
-	crud.funcFetchReadData = config.FuncFetchReadData
-	crud.funcFetchUpdateData = config.FuncFetchUpdateData
-	crud.funcLayout = config.FuncLayout
-	crud.funcRows = config.FuncRows
-	crud.funcTrash = config.FuncTrash
-	crud.funcUpdate = config.FuncUpdate
-	crud.homeURL = config.HomeURL
-	crud.readFields = config.ReadFields
-	crud.updateFields = config.UpdateFields
-
-	return crud, err
 }
 
 func (crud Crud) Handler(w http.ResponseWriter, r *http.Request) {
