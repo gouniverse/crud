@@ -128,13 +128,13 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 
 	rows, errRows := crud.funcRows()
 
-	tableContent := lo.IfF(errRows != nil, func() *hb.Tag {
+	tableContent := lo.IfF(errRows != nil, func() hb.TagInterface {
 		alert := hb.NewDiv().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
-	}).ElseF(func() *hb.Tag {
+	}).ElseF(func() hb.TagInterface {
 		table := hb.NewTable().
 			ID("TableEntities").
 			Class("table table-responsive table-striped mt-3").
@@ -361,13 +361,13 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 
 	data, err := crud.funcFetchReadData(entityID)
 
-	table := lo.IfF(err != nil, func() *hb.Tag {
+	table := lo.IfF(err != nil, func() hb.TagInterface {
 		alert := hb.NewDiv().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
-	}).ElseF(func() *hb.Tag {
+	}).ElseF(func() hb.TagInterface {
 		table := hb.NewTable().
 			Class("table table-hover table-striped").
 			Child(hb.NewThead().Child(hb.NewTR())).
@@ -630,7 +630,7 @@ func (crud *Crud) pageEntityTrashAjax(w http.ResponseWriter, r *http.Request) {
 	api.Respond(w, r, api.SuccessWithData("Entity trashed successfully", map[string]interface{}{"entity_id": entityID}))
 }
 
-func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
+func (crud *Crud) pageEntitiesEntityTrashModal() hb.TagInterface {
 	modal := hb.NewDiv().ID("ModalEntityTrash").Class("modal fade")
 	modalDialog := hb.NewDiv().Attr("class", "modal-dialog")
 	modalContent := hb.NewDiv().Attr("class", "modal-content")
@@ -646,7 +646,7 @@ func (crud *Crud) pageEntitiesEntityTrashModal() *hb.Tag {
 	return modal
 }
 
-func (crud *Crud) pageEntitiesEntityCreateModal() *hb.Tag {
+func (crud *Crud) pageEntitiesEntityCreateModal() hb.TagInterface {
 	form := crud.form(crud.createFields)
 
 	modalHeader := hb.NewDiv().Class("modal-header").

@@ -91,7 +91,7 @@ func crudHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	log.Println("1. Initializing environment variables...")
-	utils.EnvInitialize()
+	utils.EnvInitialize(".env")
 
 	log.Println("2. Initializing database...")
 	var err error
