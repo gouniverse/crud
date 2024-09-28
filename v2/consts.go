@@ -1,5 +1,6 @@
 package crud
 
+const pathHome = "home"
 const pathEntityCreateAjax = "entity-create-ajax"
 const pathEntityCreateModal = "entity-create-modal"
 const pathEntityManager = "entity-manager"

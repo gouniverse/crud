@@ -34,10 +34,10 @@ type Crud struct {
 }
 
 func (crud Crud) Handler(w http.ResponseWriter, r *http.Request) {
-	path := utils.Req(r, "path", "home")
+	path := utils.Req(r, "path", pathHome)
 
 	if path == "" {
-		path = "home"
+		path = pathHome
 	}
 
 	ctx := context.WithValue(r.Context(), "", r.URL.Path)
@@ -48,8 +48,7 @@ func (crud Crud) Handler(w http.ResponseWriter, r *http.Request) {
 
 func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Request) {
 	routes := map[string]func(w http.ResponseWriter, r *http.Request){
-		"home": crud.newEntityManagerController().page,
-		// START: Custom Entities
+		pathHome:              crud.newEntityManagerController().page,
 		pathEntityCreateAjax:  crud.newEntityCreateController().modalSave,
 		pathEntityCreateModal: crud.newEntityCreateController().modalShow,
 		pathEntityManager:     crud.newEntityManagerController().page,
@@ -57,14 +56,13 @@ func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Req
 		pathEntityUpdate:      crud.newEntityUpdateController().page,
 		pathEntityUpdateAjax:  crud.newEntityUpdateController().pageSave,
 		pathEntityTrashAjax:   crud.newEntityTrashController().pageEntityTrashAjax,
-		// END: Custom Entities
 	}
 	// log.Println(route)
 	if val, ok := routes[route]; ok {
 		return val
 	}
 
-	return routes["home"]
+	return routes[pathHome]
 }
 
 // func (crud *Crud) pageEntitiesEntityCreateModal() hb.TagInterface {
