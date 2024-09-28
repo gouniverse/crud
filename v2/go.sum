@@ -37,8 +37,8 @@ github.com/gouniverse/dataobject v0.3.0 h1:4m6zH8q3/Z159MrkX64gZO884SC2RE35FFzM1
 github.com/gouniverse/dataobject v0.3.0/go.mod h1:kGYa0bv14xCmkTCW2CpF9dIkh+S1N3O04c5eJY1jFqg=
 github.com/gouniverse/envenc v0.5.0 h1:u8eGUZvK5vxM4EdJxnIEGyZkSwBpOiilYFq2GDMq1H8=
 github.com/gouniverse/envenc v0.5.0/go.mod h1:11yi/KBuLs1GFdjysszZB5/JHKKslkh6v+UucLA5dKI=
-github.com/gouniverse/form v0.3.2 h1:PfCxHonHpPceqGVqosG2IFJjO1jRyIon5U9WLftDUWE=
-github.com/gouniverse/form v0.3.2/go.mod h1:XI+5iPwdLcCMtwa44Fs1FK+VWkc7LDI7qCCiRrUcaLA=
+github.com/gouniverse/form v0.4.0 h1:uCgm/9bIByWJpIXnLDpKGJ15J9wjQu9LovLZhAGeVDE=
+github.com/gouniverse/form v0.4.0/go.mod h1:jUgiOX7CWdPTKBNTQ1eRniLBmHDEUpdvmK56IlzlWQ0=
 github.com/gouniverse/hb v1.75.2 h1:DNo1v1Lm6vWMw7DeCgoI0mm6Sjgacfux1znhCXqD7+A=
 github.com/gouniverse/hb v1.75.2/go.mod h1:NpqGB1C2XmuG8RemolepbiKWLdL9UDqYTdT3IoNRv1g=
 github.com/gouniverse/icons v1.3.1 h1:CCiBmWRkUcREX1nSvW9lJD6IjII3m6LZJkKd3y/PhdI=

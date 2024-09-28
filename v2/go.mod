@@ -6,7 +6,7 @@ require (
 	github.com/gouniverse/api v1.6.0
 	github.com/gouniverse/bs v0.11.1
 	github.com/gouniverse/cdn v1.5.0
-	github.com/gouniverse/form v0.3.2
+	github.com/gouniverse/form v0.4.0
 	github.com/gouniverse/hb v1.75.2
 	github.com/gouniverse/icons v1.3.1
 	github.com/gouniverse/utils v1.45.0
