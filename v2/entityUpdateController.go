@@ -58,7 +58,7 @@ func (controller *entityUpdateController) page(w http.ResponseWriter, r *http.Re
 	// container.AddChild(hb.HTML(header))
 	container := hb.Div().Attr("class", "container").Attr("id", "entity-update").
 		AddChild(heading).
-		AddChild(hb.HTML(breadcrumbs))
+		AddChild(hb.Raw(breadcrumbs))
 
 	customAttrValues, errData := controller.crud.funcFetchUpdateData(entityID)
 

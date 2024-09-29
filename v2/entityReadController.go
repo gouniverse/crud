@@ -69,7 +69,7 @@ func (controller *entityReadController) page(w http.ResponseWriter, r *http.Requ
 		ID("entity-read").
 		Class("container").
 		Child(heading).
-		Child(hb.HTML(breadcrumbs))
+		Child(hb.Raw(breadcrumbs))
 
 	data, err := controller.crud.funcFetchReadData(entityID)
 

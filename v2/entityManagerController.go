@@ -133,7 +133,7 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 		ID("entity-manager").
 		Class("container").
 		Child(heading).
-		Child(hb.HTML(breadcrumbs)).
+		Child(hb.Raw(breadcrumbs)).
 		// Child(crud.pageEntitiesEntityCreateModal()).
 		Child(controller.crud.newEntityTrashController().pageEntitiesEntityTrashModal()).
 		Child(tableContent)

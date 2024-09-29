@@ -138,7 +138,7 @@ func (crud *Crud) UrlEntityUpdateAjax() string {
 }
 
 // Webpage returns the webpage template for the website
-func (crud *Crud) webpage(title, content string) *hb.Webpage {
+func (crud *Crud) webpage(title, content string) *hb.HtmlWebpage {
 	faviconImgCms := `data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmzKzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEQEAAQERAAEAAQABAAEAAQABAQEBEQABAAEREQEAAAERARARAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAAi6MAALu7AAC6owAAuC8AAIkjAAD//wAA//8AAP//AAD//wAA`
 	app := ""
 	webpage := hb.Webpage()
@@ -186,7 +186,7 @@ func (crud *Crud) webpage(title, content string) *hb.Webpage {
 		-moz-appearance: none;
 		appearance: none;
 	}`)
-	webpage.AddChild(hb.HTML(content))
+	webpage.AddChild(hb.Raw(content))
 	return webpage
 }
 
@@ -282,7 +282,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE {
 			formGroupInput = hb.Div().Children([]hb.TagInterface{
-				hb.Image().
+				hb.Image("").
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 					Style(`width:200px;`),
 				bs.InputGroup().Children([]hb.TagInterface{
@@ -297,7 +297,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
 			formGroupInput = hb.Div().
 				Children([]hb.TagInterface{
-					hb.Image().
+					hb.Image("").
 						Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 						Style(`width:200px;`),
 					hb.Input().
@@ -317,12 +317,12 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 
 		if field.Type == FORM_FIELD_TYPE_DATETIME {
 			// formGroupInput = hb.Input().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
-			formGroupInput = hb.Tag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
 			// formGroupInput = hb.Tag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
-			formGroupInput = hb.Tag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
+			formGroupInput = hb.NewTag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
 		}
 
 		if field.Type == FORM_FIELD_TYPE_NUMBER {
@@ -356,7 +356,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 		}
 
 		if field.Type == FORM_FIELD_TYPE_RAW {
-			formGroupInput = hb.HTML(fieldValue)
+			formGroupInput = hb.Raw(fieldValue)
 		}
 
 		formGroupInput.ID(fieldID)
@@ -374,7 +374,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 		tags = append(tags, formGroup)
 
 		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			script := hb.Tag(`component`).
+			script := hb.NewTag(`component`).
 				Attr(`:is`, `'script'`).
 				HTML(`setTimeout(() => {
 				const blockArea = new BlockArea('` + fieldID + `');
