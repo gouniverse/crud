@@ -111,7 +111,7 @@ func main() {
 	log.Println("URL: http://" + utils.Env("APP_URL") + " ...")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		menu := hb.NewHTML("<a href='/crud'>Standalone CRUD</a>")
+		menu := hb.Raw("<a href='/crud'>Standalone CRUD</a>")
 		w.Write([]byte(menu.ToHTML()))
 	})
 	mux.HandleFunc("/crud", crudHandler)

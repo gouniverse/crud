@@ -68,18 +68,18 @@ func (crud *Crud) getRoute(route string) func(w http.ResponseWriter, r *http.Req
 // func (crud *Crud) pageEntitiesEntityCreateModal() hb.TagInterface {
 // 	form := crud.form(crud.createFields)
 
-// 	modalHeader := hb.NewDiv().Class("modal-header").
-// 		AddChild(hb.NewHeading5().Text("New " + crud.entityNameSingular))
+// 	modalHeader := hb.Div().Class("modal-header").
+// 		AddChild(hb.Heading5().Text("New " + crud.entityNameSingular))
 
-// 	modalBody := hb.NewDiv().Class("modal-body").AddChildren(form)
+// 	modalBody := hb.Div().Class("modal-body").AddChildren(form)
 
-// 	modalFooter := hb.NewDiv().Class("modal-footer").
-// 		AddChild(hb.NewButton().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
-// 		AddChild(hb.NewButton().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
+// 	modalFooter := hb.Div().Class("modal-footer").
+// 		AddChild(hb.Button().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
+// 		AddChild(hb.Button().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
 
-// 	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]hb.TagInterface{
-// 		hb.NewDiv().Class("modal-dialog").AddChildren([]hb.TagInterface{
-// 			hb.NewDiv().Class("modal-content").AddChildren([]hb.TagInterface{
+// 	modal := hb.Div().ID("ModalEntityCreate").Class("modal fade").AddChildren([]hb.TagInterface{
+// 		hb.Div().Class("modal-dialog").AddChildren([]hb.TagInterface{
+// 			hb.Div().Class("modal-content").AddChildren([]hb.TagInterface{
 // 				modalHeader,
 // 				modalBody,
 // 				modalFooter,
@@ -141,7 +141,7 @@ func (crud *Crud) UrlEntityUpdateAjax() string {
 func (crud *Crud) webpage(title, content string) *hb.Webpage {
 	faviconImgCms := `data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmzKzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEQEAAQERAAEAAQABAAEAAQABAQEBEQABAAEREQEAAAERARARAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAAi6MAALu7AAC6owAAuC8AAIkjAAD//wAA//8AAP//AAD//wAA`
 	app := ""
-	webpage := hb.NewWebpage()
+	webpage := hb.Webpage()
 	webpage.SetTitle(title)
 	webpage.SetFavicon(faviconImgCms)
 
@@ -186,17 +186,17 @@ func (crud *Crud) webpage(title, content string) *hb.Webpage {
 		-moz-appearance: none;
 		appearance: none;
 	}`)
-	webpage.AddChild(hb.NewHTML(content))
+	webpage.AddChild(hb.HTML(content))
 	return webpage
 }
 
 func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
-	nav := hb.NewNav().Attr("aria-label", "breadcrumb")
-	ol := hb.NewOL().Attr("class", "breadcrumb")
+	nav := hb.Nav().Attr("aria-label", "breadcrumb")
+	ol := hb.OL().Attr("class", "breadcrumb")
 
 	for _, breadcrumb := range breadcrumbs {
-		li := hb.NewLI().Attr("class", "breadcrumb-item")
-		link := hb.NewHyperlink().Text(breadcrumb.Name).Attr("href", breadcrumb.URL)
+		li := hb.LI().Attr("class", "breadcrumb-item")
+		link := hb.Hyperlink().Text(breadcrumb.Name).Attr("href", breadcrumb.URL)
 
 		li.AddChild(link)
 
@@ -266,48 +266,48 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 			fieldLabel = fieldName
 		}
 
-		formGroup := hb.NewDiv().Class("form-group mb-3")
+		formGroup := hb.Div().Class("form-group mb-3")
 
-		formGroupLabel := hb.NewLabel().
+		formGroupLabel := hb.Label().
 			Text(fieldLabel).
 			Class("form-label").
 			ChildIf(
 				field.Required,
-				hb.NewSup().Text("*").Class("text-danger ml-1"),
+				hb.Sup().Text("*").Class("text-danger ml-1"),
 			)
 
-		formGroupInput := hb.NewInput().
+		formGroupInput := hb.Input().
 			Class("form-control").
 			Attr("v-model", "entityModel."+fieldName)
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE {
-			formGroupInput = hb.NewDiv().Children([]hb.TagInterface{
-				hb.NewImage().
+			formGroupInput = hb.Div().Children([]hb.TagInterface{
+				hb.Image().
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 					Style(`width:200px;`),
 				bs.InputGroup().Children([]hb.TagInterface{
-					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
+					hb.Input().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
 					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]hb.TagInterface{
-						hb.NewHyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
+						hb.Hyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
 					})),
 				}),
 			})
 		}
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
-			formGroupInput = hb.NewDiv().
+			formGroupInput = hb.Div().
 				Children([]hb.TagInterface{
-					hb.NewImage().
+					hb.Image().
 						Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 						Style(`width:200px;`),
-					hb.NewInput().
+					hb.Input().
 						Type(hb.TYPE_FILE).
 						Attr("v-on:change", "uploadImage($event, '"+fieldName+"')").
 						Attr("accept", "image/*"),
-					hb.NewButton().
+					hb.Button().
 						HTML("See Image Data").
 						Attr("v-on:click", "tmp.show_url_"+fieldName+" = !tmp.show_url_"+fieldName),
-					hb.NewTextArea().
+					hb.TextArea().
 						Type(hb.TYPE_URL).
 						Class("form-control").
 						Attr("v-if", "tmp.show_url_"+fieldName).
@@ -316,13 +316,13 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 		}
 
 		if field.Type == FORM_FIELD_TYPE_DATETIME {
-			// formGroupInput = hb.NewInput().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
-			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
-			// formGroupInput = hb.NewTag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			// formGroupInput = hb.Input().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.Tag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
+			// formGroupInput = hb.Tag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
-			formGroupInput = hb.NewTag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
+			formGroupInput = hb.Tag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
 		}
 
 		if field.Type == FORM_FIELD_TYPE_NUMBER {
@@ -334,29 +334,29 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 		}
 
 		if field.Type == FORM_FIELD_TYPE_SELECT {
-			formGroupInput = hb.NewSelect().Class("form-select").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.Select().Class("form-select").Attr("v-model", "entityModel."+fieldName)
 			for _, opt := range field.Options {
-				option := hb.NewOption().Value(opt.Key).Text(opt.Value)
+				option := hb.Option().Value(opt.Key).Text(opt.Value)
 				formGroupInput.AddChild(option)
 			}
 			if field.OptionsF != nil {
 				for _, opt := range field.OptionsF() {
-					option := hb.NewOption().Value(opt.Key).Text(opt.Value)
+					option := hb.Option().Value(opt.Key).Text(opt.Value)
 					formGroupInput.AddChild(option)
 				}
 			}
 		}
 
 		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_RAW {
-			formGroupInput = hb.NewHTML(fieldValue)
+			formGroupInput = hb.HTML(fieldValue)
 		}
 
 		formGroupInput.ID(fieldID)
@@ -367,14 +367,14 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 
 		// Add help
 		if field.Help != "" {
-			formGroupHelp := hb.NewParagraph().Class("text-info").HTML(field.Help)
+			formGroupHelp := hb.Paragraph().Class("text-info").HTML(field.Help)
 			formGroup.AddChild(formGroupHelp)
 		}
 
 		tags = append(tags, formGroup)
 
 		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			script := hb.NewTag(`component`).
+			script := hb.Tag(`component`).
 				Attr(`:is`, `'script'`).
 				HTML(`setTimeout(() => {
 				const blockArea = new BlockArea('` + fieldID + `');

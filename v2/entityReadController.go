@@ -48,42 +48,42 @@ func (controller *entityReadController) page(w http.ResponseWriter, r *http.Requ
 		},
 	})
 
-	buttonEdit := hb.NewHyperlink().
+	buttonEdit := hb.Hyperlink().
 		Class("btn btn-primary ml-2 float-end").
 		Child(icons.Icon("bi-pencil-square", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Edit").
 		Href(controller.crud.UrlEntityUpdate() + "&entity_id=" + entityID)
 
-	buttonCancel := hb.NewHyperlink().
+	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ml-2 float-end").
 		Child(icons.Icon("bi-chevron-left", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Back").
 		Href(controller.crud.UrlEntityManager())
 
-	heading := hb.NewHeading1().
+	heading := hb.Heading1().
 		HTML("View " + controller.crud.entityNameSingular).
 		Child(buttonEdit).
 		Child(buttonCancel)
 
-	container := hb.NewDiv().
+	container := hb.Div().
 		ID("entity-read").
 		Class("container").
 		Child(heading).
-		Child(hb.NewHTML(breadcrumbs))
+		Child(hb.HTML(breadcrumbs))
 
 	data, err := controller.crud.funcFetchReadData(entityID)
 
 	table := lo.IfF(err != nil, func() hb.TagInterface {
-		alert := hb.NewDiv().
+		alert := hb.Div().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
 	}).ElseF(func() hb.TagInterface {
-		table := hb.NewTable().
+		table := hb.Table().
 			Class("table table-hover table-striped").
-			Child(hb.NewThead().Child(hb.NewTR())).
-			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) hb.TagInterface {
+			Child(hb.Thead().Child(hb.TR())).
+			Child(hb.Tbody().Children(lo.Map(data, func(row [2]string, _ int) hb.TagInterface {
 				key := row[0]
 				value := row[1]
 				isRawKey := strings.HasPrefix(key, "{!!") && strings.HasSuffix(key, "!!}")
@@ -97,28 +97,28 @@ func (controller *entityReadController) page(w http.ResponseWriter, r *http.Requ
 				value = strings.ReplaceAll(value, "!!}", "")
 				value = strings.TrimSpace(value)
 
-				return hb.NewTR().Children([]hb.TagInterface{
-					hb.NewTH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
-					hb.NewTD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
+				return hb.TR().Children([]hb.TagInterface{
+					hb.TH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
+					hb.TD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
 				})
 			})))
 
 		return table
 	})
 
-	card := hb.NewDiv().
+	card := hb.Div().
 		Class("card").
 		Child(
-			hb.NewDiv().
+			hb.Div().
 				Class("card-header").
 				Style(`display:flex;justify-content:space-between;align-items:center;`).
-				Child(hb.NewHeading4().
+				Child(hb.Heading4().
 					HTML(controller.crud.entityNameSingular + " Details").
 					Style("margin-bottom:0;display:inline-block;")).
 				Child(buttonEdit),
 		).
 		Child(
-			hb.NewDiv().
+			hb.Div().
 				Class("card-body").
 				Child(table))
 

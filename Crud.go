@@ -116,45 +116,45 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	buttonCreate := hb.NewButton().
+	buttonCreate := hb.Button().
 		Class("btn btn-success float-end").
 		Attr("v-on:click", "showEntityCreateModal").
 		AddChild(icons.Icon("bi-plus-circle", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("New " + crud.entityNameSingular)
 
-	heading := hb.NewHeading1().
+	heading := hb.Heading1().
 		HTML(crud.entityNameSingular + " Manager").
 		Child(buttonCreate)
 
 	rows, errRows := crud.funcRows()
 
 	tableContent := lo.IfF(errRows != nil, func() hb.TagInterface {
-		alert := hb.NewDiv().
+		alert := hb.Div().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
 	}).ElseF(func() hb.TagInterface {
-		table := hb.NewTable().
+		table := hb.Table().
 			ID("TableEntities").
 			Class("table table-responsive table-striped mt-3").
 			Child(
-				hb.NewThead().
+				hb.Thead().
 					Children([]hb.TagInterface{
-						hb.NewTR().
+						hb.TR().
 							Children(lo.Map(crud.columnNames, func(columnName string, _ int) hb.TagInterface {
 								columnName = strings.ReplaceAll(columnName, "{!!", "")
 								columnName = strings.ReplaceAll(columnName, "!!}", "")
-								return hb.NewTH().Text(columnName)
+								return hb.TH().Text(columnName)
 							})).
-							Child(hb.NewTD().
+							Child(hb.TD().
 								HTML("Actions").
 								Style("width:120px;")),
 					})).
 			Child(
-				hb.NewTbody().
+				hb.Tbody().
 					Children(lo.Map(rows, func(row Row, _ int) hb.TagInterface {
-						buttonView := hb.NewHyperlink().
+						buttonView := hb.Hyperlink().
 							Class("btn btn-sm btn-outline-info").
 							Child(icons.Icon("bi-eye", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -162,7 +162,7 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 							Href(crud.UrlEntityRead() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
-						buttonEdit := hb.NewHyperlink().
+						buttonEdit := hb.Hyperlink().
 							Class("btn btn-sm btn-outline-warning").
 							Child(icons.Icon("bi-pencil-square", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -171,7 +171,7 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 							Href(crud.UrlEntityUpdate() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
-						buttonTrash := hb.NewButton().
+						buttonTrash := hb.Button().
 							Class("btn btn-sm btn-outline-danger").
 							Child(icons.Icon("bi-trash", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -179,17 +179,17 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 							Attr("type", "button").
 							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
 
-						tr := hb.NewTR().
+						tr := hb.TR().
 							Children(lo.Map(row.Data, func(cell string, index int) hb.TagInterface {
 								name := crud.columnNames[index]
 								isRaw := strings.HasPrefix(name, "{!!") && strings.HasSuffix(name, "!!}")
 								cell = strings.ReplaceAll(cell, "{!!", "")
 								cell = strings.ReplaceAll(cell, "!!}", "")
 								cell = strings.TrimSpace(cell)
-								return hb.NewTD().TextIf(!isRaw, cell).HTMLIf(isRaw, cell)
+								return hb.TD().TextIf(!isRaw, cell).HTMLIf(isRaw, cell)
 							})).
 							Child(
-								hb.NewTD().
+								hb.TD().
 									Style(`white-space:nowrap;`).
 									ChildIf(crud.funcFetchReadData != nil, buttonView).
 									ChildIf(crud.funcFetchUpdateData != nil, buttonEdit).
@@ -201,11 +201,11 @@ func (crud *Crud) pageEntityManager(w http.ResponseWriter, r *http.Request) {
 		return table
 	})
 
-	container := hb.NewDiv().
+	container := hb.Div().
 		ID("entity-manager").
 		Class("container").
 		Child(heading).
-		Child(hb.NewHTML(breadcrumbs)).
+		Child(hb.Raw(breadcrumbs)).
 		Child(crud.pageEntitiesEntityCreateModal()).
 		Child(crud.pageEntitiesEntityTrashModal()).
 		Child(tableContent)
@@ -336,42 +336,42 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	buttonEdit := hb.NewHyperlink().
+	buttonEdit := hb.Hyperlink().
 		Class("btn btn-primary ml-2 float-end").
 		Child(icons.Icon("bi-pencil-square", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Edit").
 		Href(crud.UrlEntityUpdate() + "&entity_id=" + entityID)
 
-	buttonCancel := hb.NewHyperlink().
+	buttonCancel := hb.Hyperlink().
 		Class("btn btn-secondary ml-2 float-end").
 		Child(icons.Icon("bi-chevron-left", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Back").
 		Href(crud.UrlEntityManager())
 
-	heading := hb.NewHeading1().
+	heading := hb.Heading1().
 		HTML("View " + crud.entityNameSingular).
 		Child(buttonEdit).
 		Child(buttonCancel)
 
-	container := hb.NewDiv().
+	container := hb.Div().
 		ID("entity-read").
 		Class("container").
 		Child(heading).
-		Child(hb.NewHTML(breadcrumbs))
+		Child(hb.Raw(breadcrumbs))
 
 	data, err := crud.funcFetchReadData(entityID)
 
 	table := lo.IfF(err != nil, func() hb.TagInterface {
-		alert := hb.NewDiv().
+		alert := hb.Div().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
 	}).ElseF(func() hb.TagInterface {
-		table := hb.NewTable().
+		table := hb.Table().
 			Class("table table-hover table-striped").
-			Child(hb.NewThead().Child(hb.NewTR())).
-			Child(hb.NewTbody().Children(lo.Map(data, func(row [2]string, _ int) hb.TagInterface {
+			Child(hb.Thead().Child(hb.TR())).
+			Child(hb.Tbody().Children(lo.Map(data, func(row [2]string, _ int) hb.TagInterface {
 				key := row[0]
 				value := row[1]
 				isRawKey := strings.HasPrefix(key, "{!!") && strings.HasSuffix(key, "!!}")
@@ -385,28 +385,28 @@ func (crud *Crud) pageEntityRead(w http.ResponseWriter, r *http.Request) {
 				value = strings.ReplaceAll(value, "!!}", "")
 				value = strings.TrimSpace(value)
 
-				return hb.NewTR().Children([]hb.TagInterface{
-					hb.NewTH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
-					hb.NewTD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
+				return hb.TR().Children([]hb.TagInterface{
+					hb.TH().TextIf(!isRawKey, key).HTMLIf(isRawKey, key),
+					hb.TD().TextIf(!isRawValue, value).HTMLIf(isRawValue, value),
 				})
 			})))
 
 		return table
 	})
 
-	card := hb.NewDiv().
+	card := hb.Div().
 		Class("card").
 		Child(
-			hb.NewDiv().
+			hb.Div().
 				Class("card-header").
 				Style(`display:flex;justify-content:space-between;align-items:center;`).
-				Child(hb.NewHeading4().
+				Child(hb.Heading4().
 					HTML(crud.entityNameSingular + " Details").
 					Style("margin-bottom:0;display:inline-block;")).
 				Child(buttonEdit),
 		).
 		Child(
-			hb.NewDiv().
+			hb.Div().
 				Class("card-body").
 				Child(table))
 
@@ -445,21 +445,21 @@ func (crud *Crud) pageEntityUpdate(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	buttonSave := hb.NewButton().Class("btn btn-success float-end").Attr("v-on:click", "entitySave(true)").
+	buttonSave := hb.Button().Class("btn btn-success float-end").Attr("v-on:click", "entitySave(true)").
 		AddChild(icons.Icon("bi-check-all", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Save")
-	buttonApply := hb.NewButton().Class("btn btn-success float-end").Attr("v-on:click", "entitySave").
+	buttonApply := hb.Button().Class("btn btn-success float-end").Attr("v-on:click", "entitySave").
 		Style("margin-right:10px;").
 		AddChild(icons.Icon("bi-check", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Apply")
-	heading := hb.NewHeading1().Text("Edit " + crud.entityNameSingular).
+	heading := hb.Heading1().Text("Edit " + crud.entityNameSingular).
 		AddChild(buttonSave).
 		AddChild(buttonApply)
 
-	// container.AddChild(hb.NewHTML(header))
-	container := hb.NewDiv().Attr("class", "container").Attr("id", "entity-update").
+	// container.AddChild(hb.HTML(header))
+	container := hb.Div().Attr("class", "container").Attr("id", "entity-update").
 		AddChild(heading).
-		AddChild(hb.NewHTML(breadcrumbs))
+		AddChild(hb.Raw(breadcrumbs))
 
 	customAttrValues, errData := crud.funcFetchUpdateData(entityID)
 
@@ -631,15 +631,15 @@ func (crud *Crud) pageEntityTrashAjax(w http.ResponseWriter, r *http.Request) {
 }
 
 func (crud *Crud) pageEntitiesEntityTrashModal() hb.TagInterface {
-	modal := hb.NewDiv().ID("ModalEntityTrash").Class("modal fade")
-	modalDialog := hb.NewDiv().Attr("class", "modal-dialog")
-	modalContent := hb.NewDiv().Attr("class", "modal-content")
-	modalHeader := hb.NewDiv().Attr("class", "modal-header").AddChild(hb.NewHeading5().Text("Trash Entity"))
-	modalBody := hb.NewDiv().Attr("class", "modal-body")
-	modalBody.AddChild(hb.NewParagraph().Text("Are you sure you want to move this entity to trash bin?"))
-	modalFooter := hb.NewDiv().Attr("class", "modal-footer")
-	modalFooter.AddChild(hb.NewButton().Text("Close").Attr("class", "btn btn-secondary").Attr("data-bs-dismiss", "modal"))
-	modalFooter.AddChild(hb.NewButton().Text("Move to trash bin").Attr("class", "btn btn-danger").Attr("v-on:click", "entityTrash"))
+	modal := hb.Div().ID("ModalEntityTrash").Class("modal fade")
+	modalDialog := hb.Div().Attr("class", "modal-dialog")
+	modalContent := hb.Div().Attr("class", "modal-content")
+	modalHeader := hb.Div().Attr("class", "modal-header").AddChild(hb.Heading5().Text("Trash Entity"))
+	modalBody := hb.Div().Attr("class", "modal-body")
+	modalBody.AddChild(hb.Paragraph().Text("Are you sure you want to move this entity to trash bin?"))
+	modalFooter := hb.Div().Attr("class", "modal-footer")
+	modalFooter.AddChild(hb.Button().Text("Close").Attr("class", "btn btn-secondary").Attr("data-bs-dismiss", "modal"))
+	modalFooter.AddChild(hb.Button().Text("Move to trash bin").Attr("class", "btn btn-danger").Attr("v-on:click", "entityTrash"))
 	modalContent.AddChild(modalHeader).AddChild(modalBody).AddChild(modalFooter)
 	modalDialog.AddChild(modalContent)
 	modal.AddChild(modalDialog)
@@ -649,18 +649,18 @@ func (crud *Crud) pageEntitiesEntityTrashModal() hb.TagInterface {
 func (crud *Crud) pageEntitiesEntityCreateModal() hb.TagInterface {
 	form := crud.form(crud.createFields)
 
-	modalHeader := hb.NewDiv().Class("modal-header").
-		AddChild(hb.NewHeading5().Text("New " + crud.entityNameSingular))
+	modalHeader := hb.Div().Class("modal-header").
+		AddChild(hb.Heading5().Text("New " + crud.entityNameSingular))
 
-	modalBody := hb.NewDiv().Class("modal-body").AddChildren(form)
+	modalBody := hb.Div().Class("modal-body").AddChildren(form)
 
-	modalFooter := hb.NewDiv().Class("modal-footer").
-		AddChild(hb.NewButton().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
-		AddChild(hb.NewButton().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
+	modalFooter := hb.Div().Class("modal-footer").
+		AddChild(hb.Button().Text("Close").Class("btn btn-secondary").Attr("data-bs-dismiss", "modal")).
+		AddChild(hb.Button().Text("Create & Continue").Class("btn btn-primary").Attr("v-on:click", "entityCreate"))
 
-	modal := hb.NewDiv().ID("ModalEntityCreate").Class("modal fade").AddChildren([]hb.TagInterface{
-		hb.NewDiv().Class("modal-dialog").AddChildren([]hb.TagInterface{
-			hb.NewDiv().Class("modal-content").AddChildren([]hb.TagInterface{
+	modal := hb.Div().ID("ModalEntityCreate").Class("modal fade").AddChildren([]hb.TagInterface{
+		hb.Div().Class("modal-dialog").AddChildren([]hb.TagInterface{
+			hb.Div().Class("modal-content").AddChildren([]hb.TagInterface{
 				modalHeader,
 				modalBody,
 				modalFooter,
@@ -713,10 +713,10 @@ func (crud *Crud) UrlEntityUpdateAjax() string {
 }
 
 // Webpage returns the webpage template for the website
-func (crud *Crud) webpage(title, content string) *hb.Webpage {
+func (crud *Crud) webpage(title, content string) *hb.HtmlWebpage {
 	faviconImgCms := `data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAmzKzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEQEAAQERAAEAAQABAAEAAQABAQEBEQABAAEREQEAAAERARARAREAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAAi6MAALu7AAC6owAAuC8AAIkjAAD//wAA//8AAP//AAD//wAA`
 	app := ""
-	webpage := hb.NewWebpage()
+	webpage := hb.Webpage()
 	webpage.SetTitle(title)
 	webpage.SetFavicon(faviconImgCms)
 
@@ -761,17 +761,17 @@ func (crud *Crud) webpage(title, content string) *hb.Webpage {
 		-moz-appearance: none;
 		appearance: none;
 	}`)
-	webpage.AddChild(hb.NewHTML(content))
+	webpage.Child(hb.Raw(content))
 	return webpage
 }
 
 func (crud *Crud) _breadcrumbs(breadcrumbs []Breadcrumb) string {
-	nav := hb.NewNav().Attr("aria-label", "breadcrumb")
-	ol := hb.NewOL().Attr("class", "breadcrumb")
+	nav := hb.Nav().Attr("aria-label", "breadcrumb")
+	ol := hb.OL().Attr("class", "breadcrumb")
 
 	for _, breadcrumb := range breadcrumbs {
-		li := hb.NewLI().Attr("class", "breadcrumb-item")
-		link := hb.NewHyperlink().Text(breadcrumb.Name).Attr("href", breadcrumb.URL)
+		li := hb.LI().Attr("class", "breadcrumb-item")
+		link := hb.Hyperlink().Text(breadcrumb.Name).Attr("href", breadcrumb.URL)
 
 		li.AddChild(link)
 
@@ -840,48 +840,48 @@ func (crud *Crud) form(fields []FormField) []hb.TagInterface {
 			fieldLabel = fieldName
 		}
 
-		formGroup := hb.NewDiv().Class("form-group mt-3")
+		formGroup := hb.Div().Class("form-group mt-3")
 
-		formGroupLabel := hb.NewLabel().
+		formGroupLabel := hb.Label().
 			Text(fieldLabel).
 			Class("form-label").
 			ChildIf(
 				field.Required,
-				hb.NewSup().Text("*").Class("text-danger ml-1"),
+				hb.Sup().Text("*").Class("text-danger ml-1"),
 			)
 
-		formGroupInput := hb.NewInput().
+		formGroupInput := hb.Input().
 			Class("form-control").
 			Attr("v-model", "entityModel."+fieldName)
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE {
-			formGroupInput = hb.NewDiv().Children([]hb.TagInterface{
-				hb.NewImage().
+			formGroupInput = hb.Div().Children([]hb.TagInterface{
+				hb.Image("").
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 					Style(`width:200px;`),
 				bs.InputGroup().Children([]hb.TagInterface{
-					hb.NewInput().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
+					hb.Input().Type(hb.TYPE_URL).Class("form-control").Attr("v-model", "entityModel."+fieldName),
 					hb.If(crud.fileManagerURL != "", bs.InputGroupText().Children([]hb.TagInterface{
-						hb.NewHyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
+						hb.Hyperlink().Text("Browse").Href(crud.fileManagerURL).Target("_blank"),
 					})),
 				}),
 			})
 		}
 
 		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
-			formGroupInput = hb.NewDiv().
+			formGroupInput = hb.Div().
 				Children([]hb.TagInterface{
-					hb.NewImage().
+					hb.Image("").
 						Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
 						Style(`width:200px;`),
-					hb.NewInput().
+					hb.Input().
 						Type(hb.TYPE_FILE).
 						Attr("v-on:change", "uploadImage($event, '"+fieldName+"')").
 						Attr("accept", "image/*"),
-					hb.NewButton().
+					hb.Button().
 						HTML("See Image Data").
 						Attr("v-on:click", "tmp.show_url_"+fieldName+" = !tmp.show_url_"+fieldName),
-					hb.NewTextArea().
+					hb.TextArea().
 						Type(hb.TYPE_URL).
 						Class("form-control").
 						Attr("v-if", "tmp.show_url_"+fieldName).
@@ -890,9 +890,9 @@ func (crud *Crud) form(fields []FormField) []hb.TagInterface {
 		}
 
 		if field.Type == FORM_FIELD_TYPE_DATETIME {
-			// formGroupInput = hb.NewInput().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			// formGroupInput = hb.Input().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
 			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
-			// formGroupInput = hb.NewTag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			// formGroupInput = hb.Tag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
@@ -908,29 +908,29 @@ func (crud *Crud) form(fields []FormField) []hb.TagInterface {
 		}
 
 		if field.Type == FORM_FIELD_TYPE_SELECT {
-			formGroupInput = hb.NewSelect().Class("form-select").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.Select().Class("form-select").Attr("v-model", "entityModel."+fieldName)
 			for _, opt := range field.Options {
-				option := hb.NewOption().Value(opt.Key).Text(opt.Value)
+				option := hb.Option().Value(opt.Key).Text(opt.Value)
 				formGroupInput.AddChild(option)
 			}
 			if field.OptionsF != nil {
 				for _, opt := range field.OptionsF() {
-					option := hb.NewOption().Value(opt.Key).Text(opt.Value)
+					option := hb.Option().Value(opt.Key).Text(opt.Value)
 					formGroupInput.AddChild(option)
 				}
 			}
 		}
 
 		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
-			formGroupInput = hb.NewTextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
+			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
 		if field.Type == FORM_FIELD_TYPE_RAW {
-			formGroupInput = hb.NewHTML(fieldValue)
+			formGroupInput = hb.Raw(fieldValue)
 		}
 
 		formGroupInput.ID(fieldID)
@@ -941,7 +941,7 @@ func (crud *Crud) form(fields []FormField) []hb.TagInterface {
 
 		// Add help
 		if field.Help != "" {
-			formGroupHelp := hb.NewParagraph().Class("text-info").HTML(field.Help)
+			formGroupHelp := hb.Paragraph().Class("text-info").HTML(field.Help)
 			formGroup.AddChild(formGroupHelp)
 		}
 

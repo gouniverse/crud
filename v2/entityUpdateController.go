@@ -44,21 +44,21 @@ func (controller *entityUpdateController) page(w http.ResponseWriter, r *http.Re
 		},
 	})
 
-	buttonSave := hb.NewButton().Class("btn btn-success float-end").Attr("v-on:click", "entitySave(true)").
+	buttonSave := hb.Button().Class("btn btn-success float-end").Attr("v-on:click", "entitySave(true)").
 		AddChild(icons.Icon("bi-check-all", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Save")
-	buttonApply := hb.NewButton().Class("btn btn-success float-end").Attr("v-on:click", "entitySave").
+	buttonApply := hb.Button().Class("btn btn-success float-end").Attr("v-on:click", "entitySave").
 		Style("margin-right:10px;").
 		AddChild(icons.Icon("bi-check", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 		HTML("Apply")
-	heading := hb.NewHeading1().Text("Edit " + controller.crud.entityNameSingular).
+	heading := hb.Heading1().Text("Edit " + controller.crud.entityNameSingular).
 		AddChild(buttonSave).
 		AddChild(buttonApply)
 
-	// container.AddChild(hb.NewHTML(header))
-	container := hb.NewDiv().Attr("class", "container").Attr("id", "entity-update").
+	// container.AddChild(hb.HTML(header))
+	container := hb.Div().Attr("class", "container").Attr("id", "entity-update").
 		AddChild(heading).
-		AddChild(hb.NewHTML(breadcrumbs))
+		AddChild(hb.HTML(breadcrumbs))
 
 	customAttrValues, errData := controller.crud.funcFetchUpdateData(entityID)
 

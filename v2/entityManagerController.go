@@ -35,13 +35,13 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 		},
 	})
 
-	// buttonCreate := hb.NewButton().
+	// buttonCreate := hb.Button().
 	// 	Class("btn btn-success float-end").
 	// 	Attr("v-on:click", "showEntityCreateModal").
 	// 	AddChild(icons.Icon("bi-plus-circle", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
 	// 	HTML("New " + crud.entityNameSingular)
 
-	buttonCreate := hb.NewButton().
+	buttonCreate := hb.Button().
 		Class("btn btn-success float-end").
 		// Attr("v-on:click", "showEntityCreateModal").
 		AddChild(icons.Icon("bi-plus-circle", 16, 16, "white").Style("margin-top:-4px;margin-right:8px;")).
@@ -50,39 +50,39 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 		HxTarget("body").
 		HxSwap("beforeend")
 
-	heading := hb.NewHeading1().
+	heading := hb.Heading1().
 		HTML(controller.crud.entityNameSingular + " Manager").
 		Child(buttonCreate)
 
 	rows, errRows := controller.crud.funcRows()
 
 	tableContent := lo.IfF(errRows != nil, func() hb.TagInterface {
-		alert := hb.NewDiv().
+		alert := hb.Div().
 			Class("alert alert-danger").
 			HTML("There was an error retrieving the data. Please try again later")
 
 		return alert
 	}).ElseF(func() hb.TagInterface {
-		table := hb.NewTable().
+		table := hb.Table().
 			ID("TableEntities").
 			Class("table table-responsive table-striped mt-3").
 			Child(
-				hb.NewThead().
+				hb.Thead().
 					Children([]hb.TagInterface{
-						hb.NewTR().
+						hb.TR().
 							Children(lo.Map(controller.crud.columnNames, func(columnName string, _ int) hb.TagInterface {
 								columnName = strings.ReplaceAll(columnName, "{!!", "")
 								columnName = strings.ReplaceAll(columnName, "!!}", "")
-								return hb.NewTH().Text(columnName)
+								return hb.TH().Text(columnName)
 							})).
-							Child(hb.NewTD().
+							Child(hb.TD().
 								HTML("Actions").
 								Style("width:120px;")),
 					})).
 			Child(
-				hb.NewTbody().
+				hb.Tbody().
 					Children(lo.Map(rows, func(row Row, _ int) hb.TagInterface {
-						buttonView := hb.NewHyperlink().
+						buttonView := hb.Hyperlink().
 							Class("btn btn-sm btn-outline-info").
 							Child(icons.Icon("bi-eye", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -90,7 +90,7 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 							Href(controller.crud.UrlEntityRead() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
-						buttonEdit := hb.NewHyperlink().
+						buttonEdit := hb.Hyperlink().
 							Class("btn btn-sm btn-outline-warning").
 							Child(icons.Icon("bi-pencil-square", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -99,7 +99,7 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 							Href(controller.crud.UrlEntityUpdate() + "&entity_id=" + row.ID).
 							Style("margin-right:5px")
 
-						buttonTrash := hb.NewButton().
+						buttonTrash := hb.Button().
 							Class("btn btn-sm btn-outline-danger").
 							Child(icons.Icon("bi-trash", 18, 18, "#333").
 								Style("margin-top:-4px;")).
@@ -107,17 +107,17 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 							Attr("type", "button").
 							Attr("v-on:click", "showEntityTrashModal('"+row.ID+"')")
 
-						tr := hb.NewTR().
+						tr := hb.TR().
 							Children(lo.Map(row.Data, func(cell string, index int) hb.TagInterface {
 								name := controller.crud.columnNames[index]
 								isRaw := strings.HasPrefix(name, "{!!") && strings.HasSuffix(name, "!!}")
 								cell = strings.ReplaceAll(cell, "{!!", "")
 								cell = strings.ReplaceAll(cell, "!!}", "")
 								cell = strings.TrimSpace(cell)
-								return hb.NewTD().TextIf(!isRaw, cell).HTMLIf(isRaw, cell)
+								return hb.TD().TextIf(!isRaw, cell).HTMLIf(isRaw, cell)
 							})).
 							Child(
-								hb.NewTD().
+								hb.TD().
 									Style(`white-space:nowrap;`).
 									ChildIf(controller.crud.funcFetchReadData != nil, buttonView).
 									ChildIf(controller.crud.funcFetchUpdateData != nil, buttonEdit).
@@ -129,11 +129,11 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 		return table
 	})
 
-	container := hb.NewDiv().
+	container := hb.Div().
 		ID("entity-manager").
 		Class("container").
 		Child(heading).
-		Child(hb.NewHTML(breadcrumbs)).
+		Child(hb.HTML(breadcrumbs)).
 		// Child(crud.pageEntitiesEntityCreateModal()).
 		Child(controller.crud.newEntityTrashController().pageEntitiesEntityTrashModal()).
 		Child(tableContent)
