@@ -186,17 +186,17 @@ func (controller *entityUpdateController) pageSave(w http.ResponseWriter, r *htt
 
 	// Check required fields
 	for _, field := range controller.crud.updateFields {
-		if !field.Required {
+		if !field.GetRequired() {
 			continue
 		}
 
-		if _, exists := posts[field.Name]; !exists {
-			api.Respond(w, r, api.Error(field.Label+" is required field"))
+		if _, exists := posts[field.GetName()]; !exists {
+			api.Respond(w, r, api.Error(field.GetLabel()+" is required field"))
 			return
 		}
 
-		if lo.IsEmpty(posts[field.Name]) {
-			api.Respond(w, r, api.Error(field.Label+" is required field"))
+		if lo.IsEmpty(posts[field.GetName()]) {
+			api.Respond(w, r, api.Error(field.GetLabel()+" is required field"))
 			return
 		}
 	}

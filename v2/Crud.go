@@ -29,8 +29,8 @@ type Crud struct {
 	funcTrash           func(entityID string) error
 	funcUpdate          func(entityID string, data map[string]string) error
 	homeURL             string
-	readFields          []form.Field
-	updateFields        []form.Field
+	readFields          []form.FieldInterface
+	updateFields        []form.FieldInterface
 }
 
 func (crud Crud) Handler(w http.ResponseWriter, r *http.Request) {
@@ -252,16 +252,16 @@ func (crud *Crud) layout(w http.ResponseWriter, r *http.Request, title string, c
 //
 // Returns:
 // - a slice of hb.Tags representing the form.
-func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
+func (crud *Crud) form(fields []form.FieldInterface) []hb.TagInterface {
 	tags := []hb.TagInterface{}
 	for _, field := range fields {
-		fieldID := field.ID
+		fieldID := field.GetID()
 		if fieldID == "" {
 			fieldID = "id_" + utils.StrRandomFromGamma(32, "abcdefghijklmnopqrstuvwxyz1234567890")
 		}
-		fieldName := field.Name
-		fieldValue := field.Value
-		fieldLabel := field.Label
+		fieldName := field.GetName()
+		fieldValue := field.GetValue()
+		fieldLabel := field.GetLabel()
 		if fieldLabel == "" {
 			fieldLabel = fieldName
 		}
@@ -272,7 +272,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 			Text(fieldLabel).
 			Class("form-label").
 			ChildIf(
-				field.Required,
+				field.GetRequired(),
 				hb.Sup().Text("*").Class("text-danger ml-1"),
 			)
 
@@ -280,7 +280,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 			Class("form-control").
 			Attr("v-model", "entityModel."+fieldName)
 
-		if field.Type == FORM_FIELD_TYPE_IMAGE {
+		if field.GetType() == FORM_FIELD_TYPE_IMAGE {
 			formGroupInput = hb.Div().Children([]hb.TagInterface{
 				hb.Image("").
 					Attr(`v-bind:src`, `entityModel.`+fieldName+`||'https://www.freeiconspng.com/uploads/no-image-icon-11.PNG'`).
@@ -294,7 +294,7 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 			})
 		}
 
-		if field.Type == FORM_FIELD_TYPE_IMAGE_INLINE {
+		if field.GetType() == FORM_FIELD_TYPE_IMAGE_INLINE {
 			formGroupInput = hb.Div().
 				Children([]hb.TagInterface{
 					hb.Image("").
@@ -315,65 +315,66 @@ func (crud *Crud) form(fields []form.Field) []hb.TagInterface {
 				})
 		}
 
-		if field.Type == FORM_FIELD_TYPE_DATETIME {
+		if field.GetType() == FORM_FIELD_TYPE_DATETIME {
 			// formGroupInput = hb.Input().Type(hb.TYPE_DATETIME).Class("form-control").Attr("v-model", "entityModel."+fieldName)
 			formGroupInput = hb.NewTag(`el-date-picker`).Attr("type", "datetime").Attr("v-model", "entityModel."+fieldName)
 			// formGroupInput = hb.Tag(`n-date-picker`).Attr("type", "datetime").Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_HTMLAREA {
+		if field.GetType() == FORM_FIELD_TYPE_HTMLAREA {
 			formGroupInput = hb.NewTag("trumbowyg").Attr("v-model", "entityModel."+fieldName).Attr(":config", "trumbowigConfig").Class("form-control")
 		}
 
-		if field.Type == FORM_FIELD_TYPE_NUMBER {
+		if field.GetType() == FORM_FIELD_TYPE_NUMBER {
 			formGroupInput.Type(hb.TYPE_NUMBER)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_PASSWORD {
+		if field.GetType() == FORM_FIELD_TYPE_PASSWORD {
 			formGroupInput.Type(hb.TYPE_PASSWORD)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_SELECT {
+		if field.GetType() == FORM_FIELD_TYPE_SELECT {
 			formGroupInput = hb.Select().Class("form-select").Attr("v-model", "entityModel."+fieldName)
-			for _, opt := range field.Options {
+			for _, opt := range field.GetOptions() {
 				option := hb.Option().Value(opt.Key).Text(opt.Value)
 				formGroupInput.AddChild(option)
 			}
-			if field.OptionsF != nil {
-				for _, opt := range field.OptionsF() {
+			if field.GetOptionsF() != nil {
+				options := field.GetOptionsF()()
+				for _, opt := range options {
 					option := hb.Option().Value(opt.Key).Text(opt.Value)
 					formGroupInput.AddChild(option)
 				}
 			}
 		}
 
-		if field.Type == FORM_FIELD_TYPE_TEXTAREA {
+		if field.GetType() == FORM_FIELD_TYPE_TEXTAREA {
 			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+		if field.GetType() == FORM_FIELD_TYPE_BLOCKAREA {
 			formGroupInput = hb.TextArea().Class("form-control").Attr("v-model", "entityModel."+fieldName)
 		}
 
-		if field.Type == FORM_FIELD_TYPE_RAW {
+		if field.GetType() == FORM_FIELD_TYPE_RAW {
 			formGroupInput = hb.Raw(fieldValue)
 		}
 
 		formGroupInput.ID(fieldID)
-		if field.Type != FORM_FIELD_TYPE_RAW {
+		if field.GetType() != FORM_FIELD_TYPE_RAW {
 			formGroup.AddChild(formGroupLabel)
 		}
 		formGroup.AddChild(formGroupInput)
 
 		// Add help
-		if field.Help != "" {
-			formGroupHelp := hb.Paragraph().Class("text-info").HTML(field.Help)
+		if field.GetHelp() != "" {
+			formGroupHelp := hb.Paragraph().Class("text-info").HTML(field.GetHelp())
 			formGroup.AddChild(formGroupHelp)
 		}
 
 		tags = append(tags, formGroup)
 
-		if field.Type == FORM_FIELD_TYPE_BLOCKAREA {
+		if field.GetType() == FORM_FIELD_TYPE_BLOCKAREA {
 			script := hb.NewTag(`component`).
 				Attr(`:is`, `'script'`).
 				HTML(`setTimeout(() => {
@@ -425,10 +426,10 @@ func (crud *Crud) listUpdateNames() []string {
 	names := []string{}
 
 	for _, field := range crud.updateFields {
-		if field.Name == "" {
+		if field.GetName() == "" {
 			continue
 		}
-		names = append(names, field.Name)
+		names = append(names, field.GetName())
 	}
 
 	return names

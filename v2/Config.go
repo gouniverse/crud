@@ -22,7 +22,7 @@ type Config struct {
 	FuncTrash           func(entityID string) error
 	FuncUpdate          func(entityID string, data map[string]string) error
 	HomeURL             string
-	ReadFields          []form.Field
-	UpdateFields        []form.Field
+	ReadFields          []form.FieldInterface
+	UpdateFields        []form.FieldInterface
 	FuncReadExtras      func(entityID string) []hb.TagInterface
 }
