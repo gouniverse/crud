@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	ColumnNames         []string
-	CreateFields        []form.Field
+	CreateFields        []form.FieldInterface
 	Endpoint            string
 	EntityNamePlural    string
 	EntityNameSingular  string

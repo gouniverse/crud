@@ -34,19 +34,19 @@ func (controller *entityCreateController) modalSave(w http.ResponseWriter, r *ht
 
 	// Check required fields
 	for _, field := range controller.crud.createFields {
-		if !field.Required {
+		if !field.GetRequired() {
 			continue
 		}
 
-		if _, exists := posts[field.Name]; !exists {
-			errorMessage := field.Label + " is required field"
+		if _, exists := posts[field.GetName()]; !exists {
+			errorMessage := field.GetLabel() + " is required field"
 			response := hb.Swal(hb.SwalOptions{Icon: "error", Text: errorMessage}).ToHTML()
 			w.Write([]byte(response))
 			return
 		}
 
-		if lo.IsEmpty(posts[field.Name]) {
-			errorMessage := field.Label + " is required field"
+		if lo.IsEmpty(posts[field.GetName()]) {
+			errorMessage := field.GetLabel() + " is required field"
 			response := hb.Swal(hb.SwalOptions{Icon: "error", Text: errorMessage}).ToHTML()
 			w.Write([]byte(response))
 			return

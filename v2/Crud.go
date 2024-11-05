@@ -15,7 +15,7 @@ import (
 
 type Crud struct {
 	columnNames         []string
-	createFields        []form.Field
+	createFields        []form.FieldInterface
 	endpoint            string
 	entityNamePlural    string
 	entityNameSingular  string
@@ -404,10 +404,10 @@ func (crud *Crud) listCreateNames() []string {
 	names := []string{}
 
 	for _, field := range crud.createFields {
-		if field.Name == "" {
+		if field.GetName() == "" {
 			continue
 		}
-		names = append(names, field.Name)
+		names = append(names, field.GetName())
 	}
 
 	return names

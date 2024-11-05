@@ -145,8 +145,8 @@ func (controller *entityManagerController) page(w http.ResponseWriter, r *http.R
 	urlEntityUpdate, _ := utils.ToJSON(controller.crud.UrlEntityUpdate())
 
 	customAttrValues := map[string]string{}
-	lo.ForEach(controller.crud.createFields, func(field form.Field, index int) {
-		customAttrValues[field.Name] = field.Value
+	lo.ForEach(controller.crud.createFields, func(field form.FieldInterface, index int) {
+		customAttrValues[field.GetName()] = field.GetValue()
 	})
 	jsonCustomValues, _ := utils.ToJSON(customAttrValues)
 
